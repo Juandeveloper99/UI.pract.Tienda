@@ -1,0 +1,113 @@
+/* Estilos generales */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f9;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Título */
+h1 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+/* Layout horizontal para el formulario */
+form {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+/* Cada grupo se organiza en columna */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 200px;
+}
+
+/* Estilo para los labels */
+label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+/* Bordes coloreados para las cajas de texto (4px de grosor) */
+
+/* Campo Nombre: rojo */
+.nombre-label + input {
+  border: 4px solid #e74c3c;
+}
+
+/* Campo Descripción: azul */
+.descripcion-label + textarea {
+  border: 4px solid #3498db;
+}
+
+/* Campo Precio: verde */
+.precio-label + input {
+  border: 4px solid #2ecc71;
+}
+
+/* Campo Stock: morado */
+.stonk-label + input {
+  border: 4px solid #9b59b6;
+}
+
+/* Campo Categoría: amarillo */
+.categoria-label + input {
+  border: 4px solid #f1c40f;
+}
+
+/* Campo Marca: naranja */
+.marca-label + input {
+  border: 4px solid #e67e22;
+}
+
+/* Campo Código de Barras: turquesa */
+.cod_barras-label + input {
+  border: 4px solid #1abc9c;
+}
+
+/* Estilos generales para inputs y textarea */
+input[type="text"],
+input[type="number"],
+textarea {
+  padding: 8px;
+  border-radius: 5px;
+  font-size: 16px;
+  box-sizing: border-box;
+  outline: none;
+}
+
+/* Cambio de estilo al hacer focus */
+input:focus,
+textarea:focus {
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+/* Estilo para el botón */
+button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+  align-self: flex-start;
+  font-size: 16px;
+}
+
+button:hover {
+  background-color: #45a049;
+}

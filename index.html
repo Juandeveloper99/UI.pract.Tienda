@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interfaz Horizontal para Productos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<link rel="stylesheet" href="style.css" /> 
+<body>
+  <div class="container">
+    <h1>Agregar Producto</h1>
+    <form id="productForm" action="/validar" method="POST">
+
+      <!-- Campo Nombre -->
+      <div class="form-group">
+        <label class="nombre-label" for="nombre">Nombre del Producto</label>
+        <input type="text" id="nombre" name="nombre" required>
+      </div>
+      
+      <!-- Campo Descripción -->
+      <div class="form-group">
+        <label class="descripcion-label" for="descripcion">Descripción</label>
+        <textarea id="descripcion" name="descripcion" rows="2" required></textarea>
+      </div>
+      
+      <!-- Campo Precio -->
+      <div class="form-group">
+        <label class="precio-label" for="precio">Precio</label>
+        <input type="number" id="precio" name="precio" step="0.01" required>
+      </div>
+      
+      <!-- Campo Stock -->
+      <div class="form-group">
+        <label class="stonk-label" for="stonk">Stock</label>
+        <input type="number" id="stonk" name="stonk" required>
+      </div>
+      
+      <!-- Campo Categoría -->
+      <div class="form-group">
+        <label class="categoria-label" for="categoria_id">Categoria</label>
+        <select id="categoria_id" name="categoria_id" required>
+          <option value="">Seleccionar categoria</option>
+        </select>
+      </div>
+      
+      <!-- Campo Marca -->
+      <div class="form-group">
+        <label class="marca-label" for="marca_id">Marca ID</label>
+        <select id="marca_id" name="marca_id" required>
+          <option value="">Seleccionar Marca</option>
+        </select>
+      </div>
+      
+      <!-- Campo Código de Barras -->
+      <div class="form-group">
+        <label class="cod_barras-label" for="cod_barras">Código de Barras</label>
+        <input type="text" id="cod_barras" name="cod_barras" required>
+      </div>
+      
+      <!-- Botón para guardar -->
+      <div class="form-group">
+        <button type="submit">Guardar Producto</button>
+
+
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Cargar las marcas
+    const selectcategoria = document.getElementById('categoria_id');
+    fetch('http://localhost:3000/categorias', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    })
+    .then(res => res.json())
+    .then(response => {
+      console.log('Datos recibidos:', response); // Verificar qué devuelve la API
+
+      // Verificamos si los datos están en un array
+      const categoria = Array.isArray(response) ? response : response.marcas;
+
+      if (Array.isArray(categoria)) {
+        categoria.forEach(categoria => {
+          let option = document.createElement('option');
+          option.value = categoria.id; // Ajusta esto según la API
+          option.textContent = categoria.nombre; // Ajusta esto según la API
+          selectcategoria.appendChild(option);
+        });
+      } else {
+        console.error('Error: La API no devolvió un array válido', response);
+      }
+    })
+    .catch(error => {
+      console.error('Error al cargar las categorias:', error);
+    });
+    </script>
+
+    <script>
+    // Cargar las marcas
+    const selectMarca = document.getElementById('marca_id');
+    fetch('http://localhost:3000/marcas', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    })
+    .then(res => res.json())
+    .then(response => {
+      console.log('Datos recibidos:', response); // Verificar qué devuelve la API
+
+      // Verificamos si los datos están en un array
+      const marcas = Array.isArray(response) ? response : response.marcas;
+
+      if (Array.isArray(marcas)) {
+        marcas.forEach(marca => {
+          let option = document.createElement('option');
+          option.value = marca.id; // Ajusta esto según la API
+          option.textContent = marca.nombre; // Ajusta esto según la API
+          selectMarca.appendChild(option);
+        });
+      } else {
+        console.error('Error: La API no devolvió un array válido', response);
+      }
+    })
+    .catch(error => {
+      console.error('Error al cargar marcas:', error);
+    });
+   
+    </script>
+     <script>
+
+    // Enviar los datos del producto a la API (POST)
+    document.getElementById('productForm').addEventListener('submit', function(event) {
+      event.preventDefault(); // Prevenir el envío del formulario
+
+      // Obtener los datos del formulario
+      const nombre = document.getElementById('nombre').value.trim();
+      const descripcion = document.getElementById('descripcion').value.trim();
+      const precio = document.getElementById('precio').value.trim();
+      const stock = document.getElementById('stonk').value.trim();
+      //const categoria_id = document.getElementById('categoria_id').value.trim();
+     // const marca_id = document.getElementById('marca_id').value;
+      const cod_barras = document.getElementById('cod_barras').value.trim();
+
+      // Validar los campos
+      if (!nombre || !descripcion || !precio || !stock || !categoria_id || !marca_id || !cod_barras) {
+        alert('Por favor, complete todos los campos.');
+        return;
+      }
+
+      // Crear objeto del producto
+      const producto = {
+        nombre,
+        descripcion,
+        precio,
+        stock,
+    
+       // marca_id,
+        cod_barras
+      };
+
+      // Enviar la solicitud POST
+      fetch('http://localhost:3000/productos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(producto)
+      })
+      .then(res => res.json())
+      .then(response => {
+        alert('Producto agregado con éxito');
+        console.log('Producto agregado:', response);
+
+        // Limpiar el formulario
+        document.getElementById('nombre').value = '';
+        document.getElementById('descripcion').value = '';
+        document.getElementById('precio').value = '';
+        document.getElementById('stonk').value = '';
+        document.getElementById('categoria').value = '';
+        document.getElementById('marca_id').value = '';
+        document.getElementById('cod_barras').value = '';
+      })
+      .catch(error => {
+        console.error('Error al agregar el producto:', error);
+      });
+    });
+    
+  </script>
+</body>
+</html>
