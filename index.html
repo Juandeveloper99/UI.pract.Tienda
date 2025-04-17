@@ -68,6 +68,7 @@
   </div>
 
   <script>
+
     // Cargar las marcas
     const selectcategoria = document.getElementById('categoria_id');
     fetch('http://localhost:3000/categorias', {
@@ -82,11 +83,11 @@
 
       // Verificamos si los datos están en un array
       const categoria = Array.isArray(response) ? response : response.marcas;
-
+      console.log('Datos recibidos:', categoria); // Verificar qué devuelve la API
       if (Array.isArray(categoria)) {
         categoria.forEach(categoria => {
           let option = document.createElement('option');
-          option.value = categoria.id; // Ajusta esto según la API
+          option.value = categoria.id_categoria; // Ajusta esto según la API
           option.textContent = categoria.nombre; // Ajusta esto según la API
           selectcategoria.appendChild(option);
         });
@@ -118,7 +119,7 @@
       if (Array.isArray(marcas)) {
         marcas.forEach(marca => {
           let option = document.createElement('option');
-          option.value = marca.id; // Ajusta esto según la API
+          option.value = marca.id_marca; // Ajusta esto según la API
           option.textContent = marca.nombre; // Ajusta esto según la API
           selectMarca.appendChild(option);
         });
@@ -142,8 +143,8 @@
       const descripcion = document.getElementById('descripcion').value.trim();
       const precio = document.getElementById('precio').value.trim();
       const stock = document.getElementById('stonk').value.trim();
-      //const categoria_id = document.getElementById('categoria_id').value.trim();
-     // const marca_id = document.getElementById('marca_id').value;
+      const categoria_id = document.getElementById('categoria_id').value.trim();
+      const marca_id = document.getElementById('marca_id').value;
       const cod_barras = document.getElementById('cod_barras').value.trim();
 
       // Validar los campos
@@ -158,8 +159,8 @@
         descripcion,
         precio,
         stock,
-    
-       // marca_id,
+        categoria_id,
+        marca_id,
         cod_barras
       };
 
@@ -181,7 +182,7 @@
         document.getElementById('descripcion').value = '';
         document.getElementById('precio').value = '';
         document.getElementById('stonk').value = '';
-        document.getElementById('categoria').value = '';
+        document.getElementById('categoria_id').value = '';
         document.getElementById('marca_id').value = '';
         document.getElementById('cod_barras').value = '';
       })
