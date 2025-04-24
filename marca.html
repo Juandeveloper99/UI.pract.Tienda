@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario de marcas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<h1>
+    <!-- titulo negocio -->
+   Repuestos Nahomi
+ </h1>
+     <!-- Navegación horizontal superior -->
+
+     
+<nav class="nav-bar">
+ <a href="index.html" >Ingresar</a>
+ <a href="marca.html" >Marca</a>
+ <a href="facturacion.html" >Facturación</a>
+ <a href="inventario.html" >Inventario</a>
+ <a href="ventas.html" >Ventas</a>
+</nav>
+
+
+
+
+  <div class="container">
+
+    <h1> Inventario de marcas </h1>      
+    <table id="tablaInventario" > <input type="text" id="buscador" placeholder="Buscar en el inventario..." style="width: 100%; padding: 10px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #ccc;">
+     
+      <thead>
+        <tr>
+            <th>ID</th>
+          <th>Nombre</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+        <!-- Aquí se llenarán los datos con JavaScript -->
+      </tbody>
+    </table>
+
+  </div>
+
+  <script>
+    // Obtener marcas desde la API
+    fetch('http://localhost:3000/marcas', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    })
+    .then(res => res.json())
+    .then(marcas => {
+      const tbody = document.querySelector('#tablaInventario tbody');
+
+      if (Array.isArray(marcas)) {
+        marcas.forEach(marcas => {
+          const fila = document.createElement('tr');
+          fila.innerHTML = `
+           <td>${marcas.id_marca}</td>
+            
+            <td>${marcas.nombre}</td>
+           
+           
+          `;
+          tbody.appendChild(fila);
+        });
+      } else {
+        console.error('No se pudo cargar el inventario:', marcas);
+      }
+    })
+    .catch(error => {
+      console.error('Error al cargar el inventario:', error);
+    });
+  </script>
+  <script>
+  // Lógica de búsqueda por cualquier texto en la tabla
+  document.getElementById('buscador').addEventListener('input', function () {
+    const filtro = this.value.toLowerCase();
+    const filas = document.querySelectorAll('#tablaInventario tbody tr');
+
+    filas.forEach(fila => {
+      const textoFila = fila.innerText.toLowerCase();
+      if (textoFila.includes(filtro)) {
+        fila.style.display = '';
+      } else {
+        fila.style.display = 'none';
+      }
+    });
+  });
+</script>
+<script>
+    const tbody = document.querySelector('#tablaInventario tbody');
+    const buscador = document.getElementById('buscador');
+  
+    // Crear mensaje "No existe"
+    const mensajeNoExiste = document.createElement('tr');
+    mensajeNoExiste.innerHTML = `<td colspan="2" style="text-align: center; padding: 10px;">No existe en el inventario</td>`;
+    mensajeNoExiste.style.display = 'none';
+    tbody.appendChild(mensajeNoExiste);
+  
+    // Obtener marcas desde la API y construir la tabla
+    fetch('http://localhost:3000/marcas')
+      .then(res => res.json())
+      .then(marcas => {
+        if (Array.isArray(marcas)) {
+          marcas.forEach(marca => {
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+              <td>${marca.id_marca}</td>
+              <td>${marca.nombre}</td>
+            `;
+            tbody.insertBefore(fila, mensajeNoExiste);
+          });
+        } else {
+          console.error('No se pudo cargar el inventario:', marcas);
+        }
+      })
+      .catch(error => {
+        console.error('Error al cargar el inventario:', error);
+      });
+  
+    // Búsqueda con resaltado y manejo de espacios vacíos
+    buscador.addEventListener('input', function () {
+      const filtro = this.value.trim().toLowerCase();
+      const filas = tbody.querySelectorAll('tr:not(:last-child)');
+      let hayCoincidencia = false;
+  
+      filas.forEach(fila => {
+        const celdas = fila.querySelectorAll('td');
+        let coincide = false;
+  
+        celdas.forEach(celda => {
+          const textoOriginal = celda.textContent;
+          const textoLower = textoOriginal.toLowerCase();
+  
+          if (filtro && textoLower.includes(filtro)) {
+            const regex = new RegExp(`(${filtro})`, 'gi');
+            celda.innerHTML = textoOriginal.replace(regex, `<span style="background-color: #a8ffae; border-radius: 4px;">$1</span>`);
+            coincide = true;
+          } else {
+            celda.innerHTML = textoOriginal; // restaurar sin resaltado
+          }
+        });
+  
+        fila.style.display = (!filtro || coincide) ? '' : 'none';
+        if (coincide || !filtro) hayCoincidencia = true;
+      });
+  
+      mensajeNoExiste.style.display = (!hayCoincidencia && filtro) ? '' : 'none';
+    });
+  </script>
+  
+  
+</body>
+</html>

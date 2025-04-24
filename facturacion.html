@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interfaz Horizontal para Productos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<link rel="stylesheet" href="styles.css" /> 
+<body>
+  <h1>
+     <!-- titulo negocio -->
+    Repuestos Nahomi
+  </h1>
+      <!-- Navegación horizontal superior -->
+<nav class="nav-bar">
+  <a href="index.html" >Ingresar</a>
+  <a href="marca.html" >Marca</a>
+  <a href="facturacion.html" >Facturación</a>
+  <a href="inventario.html" >Inventario</a>
+  <a href="ventas.html" >Ventas</a>
+</nav>
+
+<title>Buscador de Productos</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* Estilos adicionales para sugerencias */
+    .autocomplete-list {
+      position: absolute;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 10;
+      width: 100%;
+    }
+
+    .autocomplete-item {
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .autocomplete-item:hover {
+      background-color: #eee;
+    }
+
+    .autocomplete-wrapper {
+      position: relative;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Facturación</h1>
+
+  <form>
+    <div class="autocomplete-wrapper">
+      <input type="text" id="productoBuscador" placeholder="Buscar por nombre o código de barras" autocomplete="off" />
+      <div id="sugerencias" class="autocomplete-list"></div>
+    </div>
+
+    <input type="text" id="precioProducto" placeholder="Precio" disabled />
+  </form>
+
+  <script>
+    const buscador = document.getElementById('productoBuscador');
+    const sugerencias = document.getElementById('sugerencias');
+    const precioInput = document.getElementById('precioProducto');
+
+    let productos = [];
+
+    // Obtener todos los productos
+    fetch('http://localhost:3000/productos')
+      .then(res => res.json())
+      .then(data => productos = data)
+      .catch(err => console.error('Error al obtener productos:', err));
+
+    buscador.addEventListener('input', function () {
+      const filtro = this.value.toLowerCase();
+      sugerencias.innerHTML = '';
+
+      if (!filtro) return;
+
+      const resultados = productos.filter(p =>
+        p.nombre.toLowerCase().includes(filtro) ||
+        (p.cod_barras && p.cod_barras.toLowerCase().includes(filtro))
+      );
+
+      resultados.forEach(producto => {
+        const item = document.createElement('div');
+        item.classList.add('autocomplete-item');
+        item.textContent = `${producto.nombre} (${producto.cod_barras})`;
+        item.addEventListener('click', () => {
+          buscador.value = producto.nombre;
+          precioInput.value = `$${producto.precio}`;
+          sugerencias.innerHTML = '';
+        });
+        sugerencias.appendChild(item);
+      });
+    });
+
+    // Cierra sugerencias si haces clic fuera
+    document.addEventListener('click', (e) => {
+      if (!document.querySelector('.autocomplete-wrapper').contains(e.target)) {
+        sugerencias.innerHTML = '';
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+</body>
+</html>

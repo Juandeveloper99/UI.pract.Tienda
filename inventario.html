@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventario de Productos</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Repuestos Nahomi</h1>
+
+  <nav class="nav-bar">
+    <a href="index.html">Ingresar</a>
+    <a href="marca.html">Marca</a>
+    <a href="facturacion.html">Facturación</a>
+    <a href="inventario.html">Inventario</a>
+    <a href="ventas.html">Ventas</a>
+  </nav>
+
+  <div class="container">
+    <h1>Inventario de Productos</h1>
+
+    <!-- Buscador separado de la tabla pero visualmente cerca -->
+    <input type="text" id="buscador" placeholder="Buscar en el inventario..." style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #ccc;">
+
+    <table id="tablaInventario">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Precio</th>
+          <th>Stock</th>
+          <th>Categorías</th>
+          <th>Marcas</th>
+          <th>Código de Barras</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Se llenará dinámicamente -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const tbody = document.querySelector('#tablaInventario tbody');
+    const buscador = document.getElementById('buscador');
+  
+    // Crear mensaje "No existe"
+    const mensajeNoExiste = document.createElement('tr');
+    mensajeNoExiste.innerHTML = `<td colspan="7" style="text-align: center; padding: 10px;">No existe en el inventario</td>`;
+    mensajeNoExiste.style.display = 'none';
+    tbody.appendChild(mensajeNoExiste);
+  
+    // Cargar productos desde la API
+    fetch('http://localhost:3000/productos')
+      .then(res => res.json())
+      .then(productos => {
+        if (Array.isArray(productos)) {
+          productos.forEach(producto => {
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+              <td>${producto.nombre}</td>
+              <td>${producto.descripcion}</td>
+              <td>$${producto.precio}</td>
+              <td>${producto.stock}</td>
+              <td>${producto.nombre_categoria}</td>
+              <td>${producto.nombre_marca}</td>
+              <td>${producto.cod_barras}</td>
+            `;
+            tbody.insertBefore(fila, mensajeNoExiste);
+          });
+        } else {
+          console.error('No se pudo cargar el inventario:', productos);
+        }
+      })
+      .catch(error => {
+        console.error('Error al cargar el inventario:', error);
+      });
+  
+    // Función de búsqueda con validaciones mejoradas
+    buscador.addEventListener('input', function () {
+      const filtro = this.value.trim().toLowerCase();
+      const filas = tbody.querySelectorAll('tr:not(:last-child)');
+      let hayCoincidencia = false;
+  
+      filas.forEach(fila => {
+        const celdas = fila.querySelectorAll('td');
+        let coincide = false;
+  
+        celdas.forEach(celda => {
+          const textoOriginal = celda.textContent;
+          const textoLower = textoOriginal.toLowerCase();
+  
+          if (filtro && textoLower.includes(filtro)) {
+            const regex = new RegExp(`(${filtro})`, 'gi');
+            celda.innerHTML = textoOriginal.replace(regex, `<span style="background-color: #a8ffae; border-radius: 4px;">$1</span>`);
+            coincide = true;
+          } else {
+            celda.innerHTML = textoOriginal; // restaurar
+          }
+        });
+  
+        fila.style.display = (!filtro || coincide) ? '' : 'none';
+        if (coincide || !filtro) hayCoincidencia = true;
+      });
+  
+      // Mostrar el mensaje solo si no hay coincidencias Y hay algo escrito
+      mensajeNoExiste.style.display = (!hayCoincidencia && filtro) ? '' : 'none';
+    });
+  </script>
+  
+</body>
+</html>
