@@ -1,115 +1,230 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interfaz Horizontal para Productos</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<link rel="stylesheet" href="styles.css" /> 
-<body>
-  <h1>
-     <!-- titulo negocio -->
-    Repuestos Nahomi
-  </h1>
-      <!-- Navegación horizontal superior -->
-<nav class="nav-bar">
-  <a href="index.html" >Ingresar</a>
-  <a href="marca.html" >Marca</a>
-  <a href="facturacion.html" >Facturación</a>
-  <a href="inventario.html" >Inventario</a>
-  <a href="ventas.html" >Ventas</a>
-</nav>
-
-<title>Buscador de Productos</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Facturación de Productos</title>
   <link rel="stylesheet" href="styles.css" />
-  <style>
-    /* Estilos adicionales para sugerencias */
-    .autocomplete-list {
-      position: absolute;
-      background-color: white;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      max-height: 200px;
-      overflow-y: auto;
-      z-index: 10;
-      width: 100%;
-    }
-
-    .autocomplete-item {
-      padding: 8px;
-      cursor: pointer;
-    }
-
-    .autocomplete-item:hover {
-      background-color: #eee;
-    }
-
-    .autocomplete-wrapper {
-      position: relative;
-      width: 100%;
-    }
-  </style>
 </head>
 <body>
-  <h1>Facturación</h1>
+  <h1>Repuestos Nahomi</h1>
+  <nav class="nav-bar">
+    <a href="index.html">Ingresar</a>
+    <a href="marca.html">Marca</a>
+    <a href="facturacion.html">Facturación</a>
+    <a href="inventario.html">Inventario</a>
+    <a href="ventas.html">Ventas</a>
+  </nav>
 
-  <form>
+  <form id="formularioFactura" autocomplete="off">
+    <label for="cliente">Nombre del Cliente:</label>
+    <input type="text" id="cliente" name="cliente" placeholder="Cliente" />
+
+    <label for="fecha">Fecha:</label>
+    <input type="text" id="fecha" name="fecha" disabled autocomplete="off"/>
+
+    <label for="usuario">Usuario:</label>
+    <input type="text" id="usuario" name="usuario" value="admin" />
+
+    <label for="productoBuscador">Buscar Producto:</label>
     <div class="autocomplete-wrapper">
-      <input type="text" id="productoBuscador" placeholder="Buscar por nombre o código de barras" autocomplete="off" />
+      <input type="text" id="productoBuscador" placeholder="Nombre o Código de barras" autocomplete="off" />
       <div id="sugerencias" class="autocomplete-list"></div>
     </div>
 
-    <input type="text" id="precioProducto" placeholder="Precio" disabled />
+    <label for="precioProducto">Precio:</label>
+    <input type="number" id="precioProducto" step="0.01" />
+
+    <label for="cantidadProducto">Cantidad:</label>
+    <input type="number" id="cantidadProducto" value="1" min="1" />
+
+    <label for="total">Total Producto:</label>
+    <input type="text" id="total" disabled autocomplete="off" />
+
+    <button type="button" id="agregarBtn">Agregar a la lista</button>
   </form>
+
+  <h3>Lista de productos</h3>
+  <table id="listaProductos">
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Precio</th>
+        <th>Cantidad</th>
+        <th>Total</th>
+        <th>Eliminar</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h3>Total Definitivo: <span id="totalFinal">$0.00</span></h3>
+  <button id="facturarBtn">Facturar</button>
 
   <script>
     const buscador = document.getElementById('productoBuscador');
     const sugerencias = document.getElementById('sugerencias');
     const precioInput = document.getElementById('precioProducto');
+    const cantidadInput = document.getElementById('cantidadProducto');
+    const totalInput = document.getElementById('total');
+    const listaProductos = document.getElementById('listaProductos').querySelector('tbody');
+    const totalFinal = document.getElementById('totalFinal');
+    const agregarBtn = document.getElementById('agregarBtn');
+    const facturarBtn = document.getElementById('facturarBtn');
+    const fechaInput = document.getElementById('fecha');
+    const clienteInput = document.getElementById('cliente');
+    const usuarioInput = document.getElementById('usuario');
 
     let productos = [];
 
-    // Obtener todos los productos
+    fechaInput.value = new Date().toLocaleDateString();
+
     fetch('http://localhost:3000/productos')
-      .then(res => res.json())
-      .then(data => productos = data)
-      .catch(err => console.error('Error al obtener productos:', err));
+        .then(res => res.json())
+        .then(data => {
+            productos = data.map(p => ({
+                nombre: String(p.nombre),
+                cod_barras: p.cod_barras ? String(p.cod_barras) : '',
+                precio: String(p.precio)
+            }));
+        });
 
     buscador.addEventListener('input', function () {
-      const filtro = this.value.toLowerCase();
-      sugerencias.innerHTML = '';
+        const filtro = this.value.toLowerCase();
+        sugerencias.innerHTML = '';
+        if (!filtro) return;
 
-      if (!filtro) return;
+        const resultados = productos.filter(p =>
+            p.nombre.toLowerCase().includes(filtro) ||
+            (p.cod_barras && p.cod_barras.toLowerCase().includes(filtro))
+        );
 
-      const resultados = productos.filter(p =>
-        p.nombre.toLowerCase().includes(filtro) ||
-        (p.cod_barras && p.cod_barras.toLowerCase().includes(filtro))
-      );
-
-      resultados.forEach(producto => {
-        const item = document.createElement('div');
-        item.classList.add('autocomplete-item');
-        item.textContent = `${producto.nombre} (${producto.cod_barras})`;
-        item.addEventListener('click', () => {
-          buscador.value = producto.nombre;
-          precioInput.value = `$${producto.precio}`;
-          sugerencias.innerHTML = '';
+        resultados.forEach(producto => {
+            const item = document.createElement('div');
+            item.classList.add('autocomplete-item');
+            item.textContent = `${producto.nombre} (${producto.cod_barras})`;
+            item.addEventListener('click', () => {
+                buscador.value = producto.nombre;
+                precioInput.value = producto.precio;
+                cantidadInput.value = 1;
+                actualizarTotal();
+                sugerencias.innerHTML = '';
+            });
+            sugerencias.appendChild(item);
         });
-        sugerencias.appendChild(item);
-      });
     });
 
-    // Cierra sugerencias si haces clic fuera
     document.addEventListener('click', (e) => {
-      if (!document.querySelector('.autocomplete-wrapper').contains(e.target)) {
-        sugerencias.innerHTML = '';
-      }
+        if (!document.querySelector('.autocomplete-wrapper').contains(e.target)) {
+            sugerencias.innerHTML = '';
+        }
+    });
+
+    [precioInput, cantidadInput].forEach(input => {
+        input.addEventListener('input', actualizarTotal);
+    });
+
+    function actualizarTotal() {
+        const precio = parseFloat(precioInput.value) || 0;
+        const cantidad = parseInt(cantidadInput.value) || 0;
+        totalInput.value = `$${(precio * cantidad).toFixed(2)}`;
+    }
+
+    agregarBtn.addEventListener('click', () => {
+        const nombre = buscador.value;
+        const precio = parseFloat(precioInput.value) || 0;
+        const cantidad = parseInt(cantidadInput.value) || 0;
+        const total = precio * cantidad;
+
+        if (!nombre || cantidad <= 0) return;
+
+        const fila = document.createElement('tr');
+        fila.innerHTML = `
+            <td class="nombre">${nombre}</td>
+            <td class="precio">${precio.toFixed(2)}</td>
+            <td class="cantidad">${cantidad}</td>
+            <td>$${total.toFixed(2)}</td>
+            <td><button onclick="eliminarProducto(this)">❌</button></td>
+        `;
+        listaProductos.appendChild(fila);
+
+        actualizarTotalFinal();
+
+        buscador.value = '';
+        precioInput.value = '';
+        cantidadInput.value = 1;
+        totalInput.value = '';
+    });
+
+    function actualizarTotalFinal() {
+        let total = 0;
+        listaProductos.querySelectorAll('tr').forEach(row => {
+            const subtotal = parseFloat(row.children[3].textContent.replace('$', '')) || 0;
+            total += subtotal;
+        });
+        totalFinal.textContent = `$${total.toFixed(2)}`;
+    }
+
+    function eliminarProducto(btn) {
+        const fila = btn.closest('tr');
+        fila.remove();
+        actualizarTotalFinal();
+    }
+
+    // ✅ Lógica del botón "Facturar"
+    facturarBtn.addEventListener('click', () => {
+      const cliente = clienteInput.value.trim();
+      const usuario_factura = usuarioInput.value.trim();
+      const fecha_fact = new Date().toISOString().split('T')[0];
+
+      const productos = [];
+
+      listaProductos.querySelectorAll('tr').forEach(row => {
+        const nombre = row.querySelector('.nombre')?.textContent.trim() || '';
+        const precio = row.querySelector('.precio')?.textContent.trim() || '';
+        const cantidad = row.querySelector('.cantidad')?.textContent.trim() || '';
+
+        if (nombre && precio && cantidad) {
+          productos.push(`und: ${cantidad}, pro: ${nombre}, pre: ${precio}`);
+        }
+      });
+
+      const productos_fact = productos.join(' | ');
+      const total = parseFloat(totalFinal.textContent.replace('$', '')) || 0;
+
+      const factura = {
+        fecha_fact,
+        cliente,
+        productos_fact,
+        usuario_factura,
+        total
+      };
+
+      console.log('Factura que se enviará:', factura);
+
+      
+
+      fetch('http://localhost:3000/facturacion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(factura)
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert('Factura guardada con éxito.');
+        clienteInput.value = '';
+        listaProductos.innerHTML = '';
+        totalFinal.textContent = '$0.00';
+      })
+      .catch(err => {
+        console.error('Error al guardar la factura:', err);
+        alert('Error al guardar la factura.');
+
+
+      });
+
+      
     });
   </script>
-</body>
-</html>
-
-
 </body>
 </html>
