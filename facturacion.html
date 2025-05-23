@@ -61,7 +61,7 @@
   <h3>Total Definitivo: <span id="totalFinal">$0.00</span></h3>
   <button id="facturarBtn">Facturar</button>
 
-  <script>
+   <script>
     const buscador = document.getElementById('productoBuscador');
     const sugerencias = document.getElementById('sugerencias');
     const precioInput = document.getElementById('precioProducto');
@@ -83,9 +83,11 @@
         .then(res => res.json())
         .then(data => {
             productos = data.map(p => ({
+                id_producto: p.id_producto, // Asegura incluir ID
                 nombre: String(p.nombre),
                 cod_barras: p.cod_barras ? String(p.cod_barras) : '',
-                precio: String(p.precio)
+                precio: String(p.precio),
+                stock: p.stock
             }));
         });
 
@@ -138,7 +140,12 @@
 
         if (!nombre || cantidad <= 0) return;
 
+        const producto = productos.find(p => p.nombre === nombre);
+        if (!producto) return alert('Producto no encontrado.');
+
         const fila = document.createElement('tr');
+        fila.dataset.idProducto = producto.id_producto; // Guardar ID aquí
+
         fila.innerHTML = `
             <td class="nombre">${nombre}</td>
             <td class="precio">${precio.toFixed(2)}</td>
@@ -171,60 +178,77 @@
         actualizarTotalFinal();
     }
 
-    // ✅ Lógica del botón "Facturar"
     facturarBtn.addEventListener('click', () => {
-      const cliente = clienteInput.value.trim();
-      const usuario_factura = usuarioInput.value.trim();
-      const fecha_fact = new Date().toISOString().split('T')[0];
+    const cliente = clienteInput.value.trim();
+    const usuario_factura = usuarioInput.value.trim();
+    const fecha_fact = new Date().toISOString().split('T')[0];
 
-      const productos = [];
+    const productosFacturados = [];
 
-      listaProductos.querySelectorAll('tr').forEach(row => {
+    listaProductos.querySelectorAll('tr').forEach(row => {
+        const id_producto = row.dataset.idProducto;
         const nombre = row.querySelector('.nombre')?.textContent.trim() || '';
         const precio = row.querySelector('.precio')?.textContent.trim() || '';
         const cantidad = row.querySelector('.cantidad')?.textContent.trim() || '';
 
-        if (nombre && precio && cantidad) {
-          productos.push(`und: ${cantidad}, pro: ${nombre}, pre: ${precio}`);
+        if (nombre && precio && cantidad && id_producto) {
+            productosFacturados.push({
+                id_producto,
+                nombre,
+                precio,
+                cantidad
+            });
         }
-      });
+    });
 
-      const productos_fact = productos.join(' | ');
-      const total = parseFloat(totalFinal.textContent.replace('$', '')) || 0;
+    const productos_fact = productosFacturados.map(p =>
+        `und: ${p.cantidad}, pro: ${p.nombre}, pre: ${p.precio}`
+    ).join(' | ');
 
-      const factura = {
+    const total = parseFloat(totalFinal.textContent.replace('$', '')) || 0;
+
+    const factura = {
         fecha_fact,
         cliente,
         productos_fact,
         usuario_factura,
         total
-      };
+    };
 
-      console.log('Factura que se enviará:', factura);
-
-      
-
-      fetch('http://localhost:3000/facturacion', {
+    // Enviar la factura
+    fetch('http://localhost:3000/facturacion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(factura)
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert('Factura guardada con éxito.');
+    })
+    .then(res => res.json())
+    .then(() => {
+        // Actualizar stock después de guardar la factura
+        return Promise.all(productosFacturados.map(p => {
+            const productoOriginal = productos.find(prod => prod.id_producto == p.id_producto);
+            const stockActual = productoOriginal ? productoOriginal.stock : 0;
+            const cantidadVendida = parseInt(p.cantidad);
+            const nuevoStock = stockActual - cantidadVendida;
+
+            return fetch(`http://localhost:3000/productos/${p.id_producto}/stock`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nuevo_stock: nuevoStock }) // Enviando el nuevo stock
+            });
+        }));
+    })
+    .then(() => {
+        alert('Factura guardada y stock actualizado.');
         clienteInput.value = '';
         listaProductos.innerHTML = '';
         totalFinal.textContent = '$0.00';
-      })
-      .catch(err => {
-        console.error('Error al guardar la factura:', err);
-        alert('Error al guardar la factura.');
-
-
-      });
-
-      
+    })
+    .catch(error => {
+        console.error('Error al facturar:', error);
+        alert('Ocurrió un error al guardar la factura o actualizar el stock.');
     });
-  </script>
+});
+
+</script>  
 </body>
 </html>
