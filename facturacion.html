@@ -1,254 +1,487 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Facturación de Productos</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Facturación - Repuestos Nahomi</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Repuestos Nahomi</h1>
-  <nav class="nav-bar">
-    <a href="index.html">Ingresar</a>
-    <a href="marca.html">Marca</a>
-    <a href="facturacion.html">Facturación</a>
-    <a href="inventario.html">Inventario</a>
-    <a href="ventas.html">Ventas</a>
-  </nav>
+  <header class="facturacion-header">
+    <h1 class="facturacion-business-title">Repuestos Nahomi</h1>
+    <nav class="facturacion-nav-bar">
+      <a href="index.html">Ingresar</a>
+      <a href="marca.html">Marca</a>
+      <a href="facturacion.html">Facturación</a>
+      <a href="inventario.html">Inventario</a>
+      <a href="ventas.html">Ventas</a>
+    </nav>
+  </header>
 
-  <form id="formularioFactura" autocomplete="off">
-    <label for="cliente">Nombre del Cliente:</label>
-    <input type="text" id="cliente" name="cliente" placeholder="Cliente" />
-
-    <label for="fecha">Fecha:</label>
-    <input type="text" id="fecha" name="fecha" disabled autocomplete="off"/>
-
-    <label for="usuario">Usuario:</label>
-    <input type="text" id="usuario" name="usuario" value="admin" />
-
-    <label for="productoBuscador">Buscar Producto:</label>
-    <div class="autocomplete-wrapper">
-      <input type="text" id="productoBuscador" placeholder="Nombre o Código de barras" autocomplete="off" />
-      <div id="sugerencias" class="autocomplete-list"></div>
+  <div class="facturacion-container">
+    <h2 class="facturacion-form-title">Sistema de Facturación</h2>
+    
+    <!-- Información de la factura -->
+    <div class="facturacion-info-section">
+      <div class="facturacion-form-row">
+        <div class="facturacion-form-group facturacion-cliente-field">
+          <label for="cliente">Cliente:</label>
+          <input type="text" id="cliente" name="cliente" placeholder="Nombre del cliente" required>
+        </div>
+        
+        <div class="facturacion-form-group facturacion-vendedor-field">
+          <label for="vendedor">Vendedor:</label>
+          <input type="text" id="vendedor" name="vendedor" placeholder="Nombre del vendedor" required>
+        </div>
+      </div>
+      
+      <div class="facturacion-form-row">
+        <div class="facturacion-form-group facturacion-fecha-field">
+          <label>Fecha:</label>
+          <div id="fechaActual" class="facturacion-date-time"></div>
+        </div>
+        
+        <div class="facturacion-form-group facturacion-hora-field">
+          <label>Hora:</label>
+          <div id="horaActual" class="facturacion-date-time"></div>
+        </div>
+      </div>
     </div>
 
-    <label for="precioProducto">Precio:</label>
-    <input type="number" id="precioProducto" step="0.01" />
+    <!-- Búsqueda de productos -->
+    <div class="facturacion-search-section">
+      <div class="facturacion-form-group facturacion-buscador-field">
+        <label for="productoBuscador">Buscar Producto:</label>
+        <div class="facturacion-autocomplete-wrapper">
+          <input type="text" id="productoBuscador" placeholder="Nombre o Código de barras" autocomplete="off">
+          <div id="sugerencias" class="facturacion-autocomplete-list"></div>
+        </div>
+      </div>
+      
+      <div id="productoInfo" class="facturacion-product-info" style="display: none;">
+        <div class="facturacion-form-row">
+          <div class="facturacion-form-group">
+            <label>Descripción:</label>
+            <div id="productoDescripcion" class="facturacion-product-detail"></div>
+          </div>
+          
+          <div class="facturacion-form-group">
+            <label>Stock:</label>
+            <div id="productoStock" class="facturacion-product-detail"></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <label for="cantidadProducto">Cantidad:</label>
-    <input type="number" id="cantidadProducto" value="1" min="1" />
+    <!-- Detalles del producto seleccionado -->
+    <div class="facturacion-form-row">
+      <div class="facturacion-form-group facturacion-precio-field">
+        <label for="precioProducto">Precio Unitario ($):</label>
+        <input type="number" id="precioProducto" step="0.01" min="0" disabled>
+      </div>
+      
+      <div class="facturacion-form-group facturacion-cantidad-field">
+        <label for="cantidadProducto">Cantidad:</label>
+        <input type="number" id="cantidadProducto" value="1" min="1">
+      </div>
+      
+      <div class="facturacion-form-group facturacion-total-field">
+        <label>Total Producto ($):</label>
+        <div id="totalProducto" class="facturacion-total-display">0.00</div>
+      </div>
+    </div>
+    
+    <div class="facturacion-form-group facturacion-agregar-button">
+      <button type="button" id="agregarBtn">Agregar a Factura</button>
+    </div>
 
-    <label for="total">Total Producto:</label>
-    <input type="text" id="total" disabled autocomplete="off" />
+    <!-- Lista de productos a facturar -->
+    <h3 class="facturacion-products-title">Productos a Facturar</h3>
+    <table id="listaProductos" class="facturacion-products-table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Producto</th>
+          <th>Precio Unit.</th>
+          <th>Cantidad</th>
+          <th>Total</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
 
-    <button type="button" id="agregarBtn">Agregar a la lista</button>
-  </form>
+    <!-- Total y botón de facturación -->
+    <div class="facturacion-total-section">
+      <h3>Total Factura: <span id="totalFinal" class="facturacion-total-amount">$0.00</span></h3>
+      <button id="facturarBtn" class="facturacion-submit-button">Generar Factura</button>
+    </div>
+  </div>
 
-  <h3>Lista de productos</h3>
-  <table id="listaProductos">
-    <thead>
-      <tr>
-        <th>Producto</th>
-        <th>Precio</th>
-        <th>Cantidad</th>
-        <th>Total</th>
-        <th>Eliminar</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <h3>Total Definitivo: <span id="totalFinal">$0.00</span></h3>
-  <button id="facturarBtn">Facturar</button>
-
-   <script>
+  <script>
+    // Elementos del DOM
     const buscador = document.getElementById('productoBuscador');
     const sugerencias = document.getElementById('sugerencias');
     const precioInput = document.getElementById('precioProducto');
     const cantidadInput = document.getElementById('cantidadProducto');
-    const totalInput = document.getElementById('total');
+    const totalProducto = document.getElementById('totalProducto');
     const listaProductos = document.getElementById('listaProductos').querySelector('tbody');
     const totalFinal = document.getElementById('totalFinal');
     const agregarBtn = document.getElementById('agregarBtn');
     const facturarBtn = document.getElementById('facturarBtn');
-    const fechaInput = document.getElementById('fecha');
     const clienteInput = document.getElementById('cliente');
-    const usuarioInput = document.getElementById('usuario');
+    const vendedorInput = document.getElementById('vendedor');
+    const fechaActual = document.getElementById('fechaActual');
+    const horaActual = document.getElementById('horaActual');
+    const productoInfo = document.getElementById('productoInfo');
+    const productoDescripcion = document.getElementById('productoDescripcion');
+    const productoStock = document.getElementById('productoStock');
 
+    // Variables globales
     let productos = [];
+    let productosSeleccionados = [];
+    let productoActual = null;
 
-    fechaInput.value = new Date().toLocaleDateString();
-
-    fetch('http://localhost:3000/productos')
+    // Cargar productos desde la API
+    function cargarProductos() {
+      fetch('http://localhost:3000/productos')
         .then(res => res.json())
         .then(data => {
-            productos = data.map(p => ({
-                id_producto: p.id_producto, // Asegura incluir ID
-                nombre: String(p.nombre),
-                cod_barras: p.cod_barras ? String(p.cod_barras) : '',
-                precio: String(p.precio),
-                stock: p.stock
-            }));
+          productos = data.map(p => ({
+            id_producto: p.id_producto,
+            nombre: p.nombre,
+            descripcion: p.descripcion,
+            precio: parseFloat(p.precio),
+            stock: parseInt(p.stock),
+            cod_barras: p.cod_barras
+          }));
+          console.log('Productos cargados:', productos);
+        })
+        .catch(error => {
+          console.error('Error al cargar productos:', error);
+          alert('Error al cargar los productos. Por favor recarga la página.');
         });
-
-    buscador.addEventListener('input', function () {
-        const filtro = this.value.toLowerCase();
-        sugerencias.innerHTML = '';
-        if (!filtro) return;
-
-        const resultados = productos.filter(p =>
-            p.nombre.toLowerCase().includes(filtro) ||
-            (p.cod_barras && p.cod_barras.toLowerCase().includes(filtro))
-        );
-
-        resultados.forEach(producto => {
-            const item = document.createElement('div');
-            item.classList.add('autocomplete-item');
-            item.textContent = `${producto.nombre} (${producto.cod_barras})`;
-            item.addEventListener('click', () => {
-                buscador.value = producto.nombre;
-                precioInput.value = producto.precio;
-                cantidadInput.value = 1;
-                actualizarTotal();
-                sugerencias.innerHTML = '';
-            });
-            sugerencias.appendChild(item);
-        });
-    });
-
-    document.addEventListener('click', (e) => {
-        if (!document.querySelector('.autocomplete-wrapper').contains(e.target)) {
-            sugerencias.innerHTML = '';
-        }
-    });
-
-    [precioInput, cantidadInput].forEach(input => {
-        input.addEventListener('input', actualizarTotal);
-    });
-
-    function actualizarTotal() {
-        const precio = parseFloat(precioInput.value) || 0;
-        const cantidad = parseInt(cantidadInput.value) || 0;
-        totalInput.value = `$${(precio * cantidad).toFixed(2)}`;
     }
 
-    agregarBtn.addEventListener('click', () => {
-        const nombre = buscador.value;
-        const precio = parseFloat(precioInput.value) || 0;
-        const cantidad = parseInt(cantidadInput.value) || 0;
-        const total = precio * cantidad;
+    // Actualizar fecha y hora en tiempo real
+    function actualizarFechaHora() {
+      const ahora = new Date();
+      fechaActual.textContent = ahora.toLocaleDateString();
+      horaActual.textContent = ahora.toLocaleTimeString();
+    }
 
-        if (!nombre || cantidad <= 0) return;
+    // Buscar productos por nombre o código de barras
+    function buscarProductos(termino) {
+      return productos.filter(p => 
+        p.nombre.toLowerCase().includes(termino.toLowerCase()) || 
+        (p.cod_barras && p.cod_barras.toString().includes(termino))
+      );
+    }
 
-        const producto = productos.find(p => p.nombre === nombre);
-        if (!producto) return alert('Producto no encontrado.');
-
-        const fila = document.createElement('tr');
-        fila.dataset.idProducto = producto.id_producto; // Guardar ID aquí
-
-        fila.innerHTML = `
-            <td class="nombre">${nombre}</td>
-            <td class="precio">${precio.toFixed(2)}</td>
-            <td class="cantidad">${cantidad}</td>
-            <td>$${total.toFixed(2)}</td>
-            <td><button onclick="eliminarProducto(this)">❌</button></td>
+    // Mostrar sugerencias de productos
+    function mostrarSugerencias(resultados) {
+      sugerencias.innerHTML = '';
+      
+      if (resultados.length === 0) {
+        sugerencias.style.display = 'none';
+        return;
+      }
+      
+      sugerencias.style.display = 'block';
+      
+      resultados.forEach(producto => {
+        const item = document.createElement('div');
+        item.classList.add('facturacion-autocomplete-item');
+        item.innerHTML = `
+          <strong>${producto.nombre}</strong>
+          <small>Código: ${producto.cod_barras || 'N/A'}</small>
+          <small>Stock: ${producto.stock}</small>
+          <small>Precio: $${producto.precio.toFixed(2)}</small>
         `;
-        listaProductos.appendChild(fila);
-
-        actualizarTotalFinal();
-
-        buscador.value = '';
-        precioInput.value = '';
-        cantidadInput.value = 1;
-        totalInput.value = '';
-    });
-
-    function actualizarTotalFinal() {
-        let total = 0;
-        listaProductos.querySelectorAll('tr').forEach(row => {
-            const subtotal = parseFloat(row.children[3].textContent.replace('$', '')) || 0;
-            total += subtotal;
+        
+        item.addEventListener('click', () => {
+          seleccionarProducto(producto);
+          sugerencias.style.display = 'none';
         });
-        totalFinal.textContent = `$${total.toFixed(2)}`;
+        
+        sugerencias.appendChild(item);
+      });
     }
 
-    function eliminarProducto(btn) {
-        const fila = btn.closest('tr');
-        fila.remove();
-        actualizarTotalFinal();
+    // Seleccionar un producto para la factura
+    function seleccionarProducto(producto) {
+      productoActual = producto;
+      buscador.value = producto.nombre;
+      precioInput.value = producto.precio.toFixed(2);
+      cantidadInput.value = 1;
+      productoDescripcion.textContent = producto.descripcion || 'Sin descripción';
+      productoStock.textContent = producto.stock;
+      productoInfo.style.display = 'block';
+      calcularTotalProducto();
     }
 
-    facturarBtn.addEventListener('click', () => {
-    const cliente = clienteInput.value.trim();
-    const usuario_factura = usuarioInput.value.trim();
-    const fecha_fact = new Date().toISOString().split('T')[0];
+    // Calcular total por producto
+    function calcularTotalProducto() {
+      if (!productoActual) return;
+      
+      const cantidad = parseInt(cantidadInput.value) || 0;
+      const precio = parseFloat(precioInput.value) || 0;
+      const total = cantidad * precio;
+      
+      totalProducto.textContent = total.toFixed(2);
+    }
 
-    const productosFacturados = [];
+    // Calcular total de la factura
+    function calcularTotalFactura() {
+      let total = 0;
+      
+      productosSeleccionados.forEach(p => {
+        total += p.cantidad * p.precio;
+      });
+      
+      totalFinal.textContent = `$${total.toFixed(2)}`;
+    }
 
-    listaProductos.querySelectorAll('tr').forEach(row => {
-        const id_producto = row.dataset.idProducto;
-        const nombre = row.querySelector('.nombre')?.textContent.trim() || '';
-        const precio = row.querySelector('.precio')?.textContent.trim() || '';
-        const cantidad = row.querySelector('.cantidad')?.textContent.trim() || '';
-
-        if (nombre && precio && cantidad && id_producto) {
-            productosFacturados.push({
-                id_producto,
-                nombre,
-                precio,
-                cantidad
-            });
+    // Agregar producto a la lista de facturación
+    function agregarProductoAFactura() {
+      if (!productoActual) {
+        alert('Por favor selecciona un producto primero.');
+        return;
+      }
+      
+      const cantidad = parseInt(cantidadInput.value);
+      
+      if (isNaN(cantidad) || cantidad <= 0) {
+        alert('Por favor ingresa una cantidad válida.');
+        return;
+      }
+      
+      if (cantidad > productoActual.stock) {
+        alert(`No hay suficiente stock. Stock disponible: ${productoActual.stock}`);
+        return;
+      }
+      
+      // Verificar si el producto ya está en la lista
+      const productoExistente = productosSeleccionados.find(p => p.id_producto === productoActual.id_producto);
+      
+      if (productoExistente) {
+        // Actualizar cantidad si el producto ya existe
+        productoExistente.cantidad += cantidad;
+        
+        // Actualizar la fila en la tabla
+        const fila = document.querySelector(`tr[data-id="${productoActual.id_producto}"]`);
+        if (fila) {
+          fila.cells[3].textContent = productoExistente.cantidad;
+          fila.cells[4].textContent = `$${(productoExistente.cantidad * productoExistente.precio).toFixed(2)}`;
         }
-    });
+      } else {
+        // Agregar nuevo producto a la lista
+        const productoFactura = {
+          id_producto: productoActual.id_producto,
+          cod_barras: productoActual.cod_barras,
+          nombre: productoActual.nombre,
+          precio: productoActual.precio,
+          cantidad: cantidad,
+          stock_original: productoActual.stock
+        };
+        
+        productosSeleccionados.push(productoFactura);
+        
+        // Agregar fila a la tabla
+        const fila = document.createElement('tr');
+        fila.dataset.id = productoActual.id_producto;
+        fila.innerHTML = `
+          <td>${productoActual.cod_barras || 'N/A'}</td>
+          <td>${productoActual.nombre}</td>
+          <td>$${productoActual.precio.toFixed(2)}</td>
+          <td>${cantidad}</td>
+          <td>$${(cantidad * productoActual.precio).toFixed(2)}</td>
+          <td><button class="facturacion-delete-button" onclick="eliminarProducto(this)">❌</button></td>
+        `;
+        
+        listaProductos.appendChild(fila);
+      }
+      
+      // Actualizar totales y limpiar campos
+      calcularTotalFactura();
+      resetearCamposProducto();
+    }
 
-    const productos_fact = productosFacturados.map(p =>
-        `und: ${p.cantidad}, pro: ${p.nombre}, pre: ${p.precio}`
-    ).join(' | ');
+    // Eliminar producto de la lista
+    function eliminarProducto(boton) {
+      const fila = boton.closest('tr');
+      const idProducto = parseInt(fila.dataset.id);
+      
+      // Eliminar de la lista de productos seleccionados
+      productosSeleccionados = productosSeleccionados.filter(p => p.id_producto !== idProducto);
+      
+      // Eliminar fila de la tabla
+      fila.remove();
+      
+      // Actualizar total
+      calcularTotalFactura();
+    }
 
-    const total = parseFloat(totalFinal.textContent.replace('$', '')) || 0;
+    // Resetear campos del producto
+    function resetearCamposProducto() {
+      buscador.value = '';
+      precioInput.value = '';
+      cantidadInput.value = 1;
+      totalProducto.textContent = '0.00';
+      productoInfo.style.display = 'none';
+      productoActual = null;
+      sugerencias.innerHTML = '';
+    }
 
-    const factura = {
-        fecha_fact,
-        cliente,
-        productos_fact,
-        usuario_factura,
-        total
-    };
-
-    // Enviar la factura
-    fetch('http://localhost:3000/facturacion', {
+    // Generar factura
+    // Función corregida para generar factura con el formato específico
+    function generarFactura() {
+      if (productosSeleccionados.length === 0) {
+        alert('No hay productos para facturar.');
+        return;
+      }
+      
+      if (!clienteInput.value.trim()) {
+        alert('Por favor ingresa el nombre del cliente.');
+        return;
+      }
+      
+      const vendedor = vendedorInput.value.trim();
+      if (!vendedor) {
+        alert('Por favor ingresa el nombre del vendedor.');
+        return;
+      }
+      
+      const ahora = new Date();
+      const fecha_fact = ahora.toLocaleString(); // Fecha y hora combinadas
+      
+      // Formatear productos como string en el formato requerido
+      const productos_fact = productosSeleccionados.map(p => 
+        `und:${p.cantidad}, pro:${p.nombre} (${p.cod_barras || 'N/A'}), pre:${p.precio.toFixed(2)}`
+      ).join(' | ');
+      
+      // Preparar datos de la factura en el formato exacto requerido
+      const factura = {
+        fecha_fact: fecha_fact.toString(), // Convertido a varchar
+        cliente: clienteInput.value.trim(),
+        productos_fact: productos_fact,
+        usuario_factura: vendedor, // Asegurando que coincida con el nombre de columna en la BD
+        total: parseFloat(totalFinal.textContent.replace('$', '')) // Enviado como número
+      };
+      
+      console.log('Datos a enviar:', factura); // Para verificación
+      
+      // Enviar factura a la API con el formato corregido
+      fetch('http://localhost:3000/facturacion', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify(factura)
-    })
-    .then(res => res.json())
-    .then(() => {
-        // Actualizar stock después de guardar la factura
-        return Promise.all(productosFacturados.map(p => {
-            const productoOriginal = productos.find(prod => prod.id_producto == p.id_producto);
-            const stockActual = productoOriginal ? productoOriginal.stock : 0;
-            const cantidadVendida = parseInt(p.cantidad);
-            const nuevoStock = stockActual - cantidadVendida;
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.json().then(err => { throw new Error(err.message || 'Error al guardar la factura'); });
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Actualizar stock de productos
+        actualizarStocks();
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('Error al generar la factura: ' + error.message);
+      });
+    }
 
-            return fetch(`http://localhost:3000/productos/${p.id_producto}/stock`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nuevo_stock: nuevoStock }) // Enviando el nuevo stock
-            });
-        }));
-    })
-    .then(() => {
-        alert('Factura guardada y stock actualizado.');
-        clienteInput.value = '';
-        listaProductos.innerHTML = '';
-        totalFinal.textContent = '$0.00';
-    })
-    .catch(error => {
-        console.error('Error al facturar:', error);
-        alert('Ocurrió un error al guardar la factura o actualizar el stock.');
+
+    // Actualizar stocks después de facturar
+    function actualizarStocks() {
+      const actualizaciones = productosSeleccionados.map(producto => {
+        const nuevoStock = producto.stock_original - producto.cantidad;
+        
+        if (nuevoStock <= 0) {
+          // Eliminar producto si stock llega a 0 o menos
+          return fetch(`http://localhost:3000/productos/${producto.id_producto}`, {
+            method: 'DELETE'
+          });
+        } else {
+          // Actualizar stock del producto
+          return fetch(`http://localhost:3000/productos/${producto.id_producto}/stock`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ nuevo_stock: nuevoStock })
+          });
+        }
+      });
+      
+      Promise.all(actualizaciones)
+        .then(() => {
+          alert('Factura generada y stocks actualizados correctamente.');
+          // Limpiar todo después de facturar
+          productosSeleccionados = [];
+          listaProductos.innerHTML = '';
+          totalFinal.textContent = '$0.00';
+          clienteInput.value = '';
+          cargarProductos(); // Recargar productos para actualizar stocks
+        })
+        .catch(error => {
+          console.error('Error al actualizar stocks:', error);
+          alert('Factura generada pero hubo un error al actualizar los stocks.');
+        });
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarProductos();
+      setInterval(actualizarFechaHora, 1000);
+      actualizarFechaHora();
     });
-});
 
-</script>  
+    buscador.addEventListener('input', () => {
+      const termino = buscador.value.trim();
+      
+      if (termino.length < 2) {
+        sugerencias.innerHTML = '';
+        sugerencias.style.display = 'none';
+        return;
+      }
+      
+      const resultados = buscarProductos(termino);
+      mostrarSugerencias(resultados);
+    });
+
+    cantidadInput.addEventListener('input', () => {
+      if (productoActual) {
+        const cantidad = parseInt(cantidadInput.value) || 0;
+        
+        if (cantidad > productoActual.stock) {
+          alert(`No hay suficiente stock. Stock disponible: ${productoActual.stock}`);
+          cantidadInput.value = productoActual.stock;
+        }
+        
+        calcularTotalProducto();
+      }
+    });
+
+    precioInput.addEventListener('input', () => {
+      if (productoActual) {
+        calcularTotalProducto();
+      }
+    });
+
+    agregarBtn.addEventListener('click', agregarProductoAFactura);
+    facturarBtn.addEventListener('click', generarFactura);
+
+    // Cerrar sugerencias al hacer clic fuera
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.facturacion-autocomplete-wrapper')) {
+        sugerencias.style.display = 'none';
+      }
+    });
+  </script>
 </body>
 </html>

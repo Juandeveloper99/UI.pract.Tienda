@@ -1,218 +1,383 @@
 /* Estilos generales */
 body {
   font-family: Arial, sans-serif;
-  background-color: #f6f4f9;
   margin: 0;
-  padding: 20px;
+  padding: 0;
+  background-color: #f5f5f5;
 }
 
-.container {
+header {
   background-color: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  padding: 10px 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
-/* Título */
-h1 {
+.business-title {
+  margin: 0;
+  padding: 10px 0;
+  color: #333;
+  font-size: 24px;
+}
+
+/* Barra de navegación */
+.nav-bar {
+  background-color: #003366; /* Azul marino oscuro como el botón */
+  padding: 10px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.nav-bar a {
+  color: white;
+  text-decoration: none;
+  padding: 10px 20px;
+  margin: 0 5px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.nav-bar a:hover {
+  background-color: #004080;
+}
+
+/* Contenedor del formulario */
+.container {
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.form-title {
   text-align: center;
   color: #333;
   margin-bottom: 20px;
 }
 
-/* Layout horizontal para el formulario */
-form {
+/* Estructura del formulario */
+.form-row {
   display: flex;
-  flex-direction: row;
   flex-wrap: wrap;
   gap: 20px;
+  margin-bottom: 20px;
 }
 
-/* Cada grupo se organiza en columna */
+.form-column {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Campos del formulario */
 .form-group {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 200px;
+  margin-bottom: 15px;
 }
 
-/* Estilo para los labels */
-label {
-  font-weight: bold;
+.form-group label {
+  display: block;
   margin-bottom: 5px;
+  font-weight: bold;
 }
 
-/* Bordes coloreados para las cajas de texto (4px de grosor) */
-
-/* Campo Nombre: rojo */
-.nombre-label + input {
-  border: 4px solid #e74c3c;
-}
-
-/* Campo Descripción: azul */
-.descripcion-label + textarea {
-  border: 4px solid #3498db;
-}
-
-/* Campo Precio: verde */
-.precio-label + input {
-  border: 4px solid #2ecc71;
-}
-
-/* Campo Stock: morado */
-.stonk-label + input {
-  border: 4px solid #9b59b6;
-}
-
-/* Campo Categoría: amarillo */
-.categoria-label + input {
-  border: 4px solid #f1c40f;
-}
-
-/* Campo Marca: naranja */
-.marca-label + input {
-  border: 4px solid #e67e22;
-}
-
-/* Campo Código de Barras: turquesa */
-.cod_barras-label + input {
-  border: 4px solid #1abc9c;
-}
-
-/* Estilos generales para inputs y textarea */
-input[type="text"],
-input[type="number"],
-textarea {
-  padding: 8px;
-  border-radius: 5px;
-  font-size: 16px;
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
   box-sizing: border-box;
-  outline: none;
 }
 
-/* Cambio de estilo al hacer focus */
-input:focus,
-textarea:focus {
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+.form-group textarea {
+  resize: vertical;
 }
 
-/* Estilo para el botón */
-button {
-  background-color: #4CAF50;
-  color: rgb(255, 255, 255);
-  padding: 10px 15px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
+/* Estilos específicos para cada campo con colores */
+.product-field input {
+  border-color: #ff0000; /* Rojo para producto */
+}
+
+.price-field input {
+  border-color: #00aa00; /* Verde para precio */
+}
+
+.stock-field input {
+  border-color: #800080; /* Morado para stock */
+}
+
+.barcode-field input {
+  border-color: #00cccc; /* Verde acua para código de barras */
+}
+
+.description-field textarea {
+  border-color: #0000ff; /* Azul para descripción */
+}
+
+.category-field select {
+  border-color: #ffa500; /* Naranja para categoría */
+}
+
+.brand-field select {
+  border-color: #ffcc00; /* Amarillo para marca */
+}
+
+/* Botón de guardar */
+.submit-button {
+  text-align: center;
   margin-top: 20px;
-  align-self: flex-start;
+}
+
+.submit-button button {
+  background-color: #003366; /* Azul marino oscuro */
+  color: white;
+  border: none;
+  padding: 12px 25px;
   font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-button:hover {
-  background-color: #45a049;
+.submit-button button:hover {
+  background-color: #004080;
 }
 
-/* Barra de navegación horizontal */
-.nav-bar {
+/* Responsive */
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+  }
+  
+  .form-column {
+    width: 100%;
+  }
+}
+
+
+/* ========== ESTILOS ESPECÍFICOS PARA FACTURACIÓN ========== */
+
+/* Header específico para facturación */
+.facturacion-header {
+  background-color: #fff;
+  padding: 10px 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.facturacion-business-title {
+  margin: 0;
+  padding: 10px 0;
+  color: #333;
+  font-size: 24px;
+}
+
+/* Barra de navegación para facturación */
+.facturacion-nav-bar {
+  background-color: #003366;
+  padding: 10px 0;
   display: flex;
   justify-content: center;
-  gap: 10px; /* Menor separación entre botones */
-  background-color: #2c3e50;
-  padding: 8px 0; /* Reduce el alto de la navbar */
-  border-radius: 12px; /* Bordes más redondos */
-  margin: 10px auto; /* Un poco de margen arriba y abajo */
-  width: max-content; /* Solo ocupa el ancho necesario */
 }
 
-/* Estilo de los enlaces */
-.nav-bar a {
+.facturacion-nav-bar a {
   color: white;
   text-decoration: none;
-  font-size: 14px; /* Letra más pequeña */
-  padding: 10px 20px; /* Menor tamaño de botón */
-  border-radius: 10px; /* Bordes de los botones redondos */
-  transition: background-color 0.3s ease;
+  padding: 10px 20px;
+  margin: 0 5px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
 }
 
-.nav-bar a:hover {
-  background-color: #e47e09;
+.facturacion-nav-bar a:hover {
+  background-color: #004080;
 }
 
+/* Contenedor principal para facturación */
+.facturacion-container {
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
 
+.facturacion-form-title {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
 
-/*celdas y culumnas inventario*/
-.nav-bar a {
-  color: white;
-  text-decoration: none;
-  margin: 0 15px;
+/* Estructura del formulario de facturación */
+.facturacion-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.facturacion-form-group {
+  margin-bottom: 15px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.facturacion-form-group label {
+  display: block;
+  margin-bottom: 5px;
   font-weight: bold;
 }
 
-table {
+.facturacion-form-group input,
+.facturacion-form-group select {
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-th, td {
   padding: 10px;
-  border: 1px solid #ccc;
-  text-align: center;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
 
-th {
+/* Estilos específicos para cada campo con colores */
+.facturacion-cliente-field input {
+  border-color: #ff0000; /* Rojo para cliente */
+}
+
+.facturacion-fecha-field input {
+  border-color: #00aa00; /* Verde para fecha */
+}
+
+.facturacion-usuario-field input {
+  border-color: #800080; /* Morado para usuario */
+}
+
+.facturacion-buscador-field input {
+  border-color: #00cccc; /* Verde acua para buscador */
+}
+
+.facturacion-precio-field input {
+  border-color: #0000ff; /* Azul para precio */
+}
+
+.facturacion-cantidad-field input {
+  border-color: #ffa500; /* Naranja para cantidad */
+}
+
+.facturacion-total-field input {
+  border-color: #ffcc00; /* Amarillo para total */
+}
+
+/* Autocomplete para facturación */
+.facturacion-autocomplete-wrapper {
+  position: relative;
+}
+
+.facturacion-autocomplete-list {
+  position: absolute;
+  z-index: 1000;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: none;
+}
+
+.facturacion-autocomplete-item {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.facturacion-autocomplete-item:hover {
   background-color: #f0f0f0;
 }
 
-/*facturas*/
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f4f4f4;
+/* Botones para facturación */
+.facturacion-agregar-button,
+.facturacion-submit-button {
+  text-align: center;
+  margin-top: 20px;
 }
 
-.formulario-factura {
-  max-width: 600px;
-  margin: 40px auto;
-  padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 12px;
-  background-color: #ffffff;
+.facturacion-agregar-button button,
+.facturacion-submit-button {
+  background-color: #003366;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-.formulario-factura label {
-  display: block;
-  margin-top: 10px;
+.facturacion-agregar-button button:hover,
+.facturacion-submit-button:hover {
+  background-color: #004080;
+}
+
+/* Tabla de productos para facturación */
+.facturacion-products-title {
+  margin-top: 30px;
+  color: #333;
+}
+
+.facturacion-products-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.facturacion-products-table th,
+.facturacion-products-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.facturacion-products-table th {
+  background-color: #f5f5f5;
+}
+
+.facturacion-products-table button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #ff0000;
+}
+
+/* Sección de total para facturación */
+.facturacion-total-section {
+  text-align: right;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 2px solid #003366;
+}
+
+.facturacion-total-amount {
+  color: #003366;
   font-weight: bold;
 }
 
-.formulario-factura input {
-  width: 100%;
-  padding: 8px;
-  margin-top: 5px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+/* Responsive para facturación */
+@media (max-width: 768px) {
+  .facturacion-form-row {
+    flex-direction: column;
+  }
+  
+  .facturacion-form-group {
+    width: 100%;
+  }
+  
+  .facturacion-nav-bar {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .facturacion-nav-bar a {
+    margin: 5px 0;
+  }
 }
-
-.formulario-factura button {
-  margin-top: 20px;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  background-color: #4CAF50;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.formulario-factura button:hover {
-  background-color: #45a049;
-}
-
-
-
-
-
-
-
-
-
