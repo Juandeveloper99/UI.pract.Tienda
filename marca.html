@@ -3,156 +3,298 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventario de marcas</title>
+  <title>Inventario de Marcas - Repuestos Nahomi</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<h1>
-    <!-- titulo negocio -->
-   Repuestos Nahomi
- </h1>
-     <!-- Navegación horizontal superior -->
+<body>
+  <header class="marcas-header">
+    <h1 class="marcas-business-title">Repuestos Nahomi</h1>
+    <nav class="marcas-nav-bar">
+      <a href="index.html">Ingresar</a>
+      <a href="marca.html">Marca</a>
+      <a href="facturacion.html">Facturación</a>
+      <a href="inventario.html">Inventario</a>
+      <a href="ventas.html">Ventas</a>
+    </nav>
+  </header>
 
-     
-<nav class="nav-bar">
- <a href="index.html" >Ingresar</a>
- <a href="marca.html" >Marca</a>
- <a href="facturacion.html" >Facturación</a>
- <a href="inventario.html" >Inventario</a>
- <a href="ventas.html" >Ventas</a>
-</nav>
+  <div class="marcas-container">
+    <h2 class="marcas-title">Gestión de Marcas</h2>
 
+    <!-- Barra de búsqueda y acciones -->
+    <div class="marcas-actions-section">
+      <div class="marcas-search-group">
+        <input type="text" id="marcas-buscador" class="marcas-search-input" placeholder="Buscar marcas...">
+        <button id="marcas-refresh-btn" class="marcas-refresh-button">↻ Actualizar</button>
+        <button id="marcas-add-btn" class="marcas-add-button">＋ Nueva Marca</button>
+      </div>
+    </div>
 
-
-
-  <div class="container">
-
-    <h1> Inventario de marcas </h1>      
-    <table id="tablaInventario" > <input type="text" id="buscador" placeholder="Buscar en el inventario..." style="width: 100%; padding: 10px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #ccc;">
-     
-      <thead>
-        <tr>
+    <!-- Tabla de marcas -->
+    <div class="marcas-table-container">
+      <table id="marcas-tabla" class="marcas-table">
+        <thead>
+          <tr>
             <th>ID</th>
-          <th>Nombre</th>
-        </tr>
-      </thead>
-      <tbody>
-        
-        <!-- Aquí se llenarán los datos con JavaScript -->
-      </tbody>
-    </table>
+            <th>Nombre</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="marcas-tbody">
+          <!-- Filas se generarán dinámicamente -->
+        </tbody>
+      </table>
+    </div>
 
+    <!-- Mensaje cuando no hay resultados -->
+    <div id="marcas-no-results" class="marcas-no-results">
+      No se encontraron marcas
+    </div>
   </div>
 
-  <script>
-    // Obtener marcas desde la API
-    fetch('http://localhost:3000/marcas', {
-      method: 'GET',
+  <!-- Modal para agregar/editar marca -->
+  <div id="marcas-modal" class="marcas-modal">
+    <div class="marcas-modal-content">
+      <span class="marcas-modal-close">&times;</span>
+      <h3 id="marcas-modal-title">Nueva Marca</h3>
+      <form id="marcas-form">
+        <input type="hidden" id="marca-id">
+        
+        <div class="marcas-form-group">
+          <label for="marca-nombre">Nombre:</label>
+          <input type="text" id="marca-nombre" required>
+        </div>
+        
+        <div class="marcas-form-actions">
+          <button type="submit" class="marcas-save-button">Guardar</button>
+          <button type="button" class="marcas-cancel-button">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script >// Elementos del DOM
+const tbody = document.getElementById('marcas-tbody');
+const buscador = document.getElementById('marcas-buscador');
+const refreshBtn = document.getElementById('marcas-refresh-btn');
+const addBtn = document.getElementById('marcas-add-btn');
+const noResultsMsg = document.getElementById('marcas-no-results');
+const modal = document.getElementById('marcas-modal');
+const closeModal = document.querySelector('.marcas-modal-close');
+const cancelModal = document.querySelector('.marcas-cancel-button');
+const form = document.getElementById('marcas-form');
+const modalTitle = document.getElementById('marcas-modal-title');
+
+// Variables globales
+let marcas = [];
+let modoEdicion = false;
+let marcaEditando = null;
+
+// Cargar marcas desde la API
+async function cargarMarcas() {
+  try {
+    const response = await fetch('http://localhost:3000/marcas');
+    marcas = await response.json();
+    
+    if (!Array.isArray(marcas)) {
+      throw new Error('Formato de respuesta inválido');
+    }
+    
+    renderizarMarcas(marcas);
+    noResultsMsg.style.display = 'none';
+  } catch (error) {
+    console.error('Error al cargar marcas:', error);
+    noResultsMsg.textContent = 'Error al cargar las marcas';
+    noResultsMsg.style.display = 'block';
+  }
+}
+
+// Renderizar marcas en la tabla
+function renderizarMarcas(marcasFiltradas) {
+  tbody.innerHTML = '';
+  
+  if (marcasFiltradas.length === 0) {
+    noResultsMsg.style.display = 'block';
+    return;
+  }
+  
+  noResultsMsg.style.display = 'none';
+  
+  marcasFiltradas.forEach(marca => {
+    const fila = document.createElement('tr');
+    fila.dataset.id = marca.id_marca;
+    fila.innerHTML = `
+      <td>${marca.id_marca}</td>
+      <td>${marca.nombre}</td>
+      <td class="marcas-actions-cell">
+        <button class="marcas-edit-button" data-id="${marca.id_marca}">✏️ Editar</button>
+        <button class="marcas-delete-button" data-id="${marca.id_marca}">🗑️ Eliminar</button>
+      </td>
+    `;
+    tbody.appendChild(fila);
+  });
+  
+  // Agregar event listeners a los botones
+  document.querySelectorAll('.marcas-edit-button').forEach(btn => {
+    btn.addEventListener('click', abrirModalEdicion);
+  });
+  
+  document.querySelectorAll('.marcas-delete-button').forEach(btn => {
+    btn.addEventListener('click', eliminarMarca);
+  });
+}
+
+// Función de búsqueda con resaltado
+function buscarMarcas(termino) {
+  const filtro = termino.toLowerCase().trim();
+  
+  if (!filtro) {
+    renderizarMarcas(marcas);
+    return;
+  }
+  
+  const resultados = marcas.filter(marca => {
+    return (
+      marca.nombre.toLowerCase().includes(filtro) ||
+      marca.id_marca.toString().includes(filtro)
+    );
+  });
+  
+  // Resaltar coincidencias en los resultados
+  const resultadosConResaltado = resultados.map(marca => {
+    const marcaResaltada = {...marca};
+    
+    // Función para resaltar texto
+    const resaltarTexto = (texto) => {
+      if (!texto) return texto;
+      const regex = new RegExp(`(${filtro.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+      return texto.toString().replace(regex, '<span class="marcas-resaltado">$1</span>');
+    };
+    
+    // Aplicar resaltado a todos los campos buscables
+    marcaResaltada.nombre = resaltarTexto(marca.nombre);
+    marcaResaltada.id_marca = resaltarTexto(marca.id_marca);
+    
+    return marcaResaltada;
+  });
+  
+  renderizarMarcas(resultadosConResaltado);
+  
+  if (termino && resultados.length === 0) {
+    noResultsMsg.textContent = `No se encontraron marcas para "${termino}"`;
+    noResultsMsg.style.display = 'block';
+  }
+}
+
+// Abrir modal para nueva marca
+function abrirModalNueva() {
+  modoEdicion = false;
+  marcaEditando = null;
+  modalTitle.textContent = 'Nueva Marca';
+  form.reset();
+  modal.style.display = 'block';
+}
+
+// Abrir modal para edición
+function abrirModalEdicion(event) {
+  const id = event.target.dataset.id;
+  marcaEditando = marcas.find(m => m.id_marca == id);
+  
+  if (!marcaEditando) return;
+  
+  modoEdicion = true;
+  modalTitle.textContent = 'Editar Marca';
+  
+  // Llenar el formulario
+  document.getElementById('marca-id').value = marcaEditando.id_marca;
+  document.getElementById('marca-nombre').value = marcaEditando.nombre;
+  
+  modal.style.display = 'block';
+}
+
+// Guardar cambios (POST o PUT)
+async function guardarMarca(event) {
+  event.preventDefault();
+  
+  const marca = {
+    nombre: document.getElementById('marca-nombre').value.trim()
+  };
+  
+  if (!marca.nombre) {
+    alert('El nombre de la marca es requerido');
+    return;
+  }
+  
+  try {
+    let response;
+    const url = modoEdicion 
+      ? `http://localhost:3000/marcas/${document.getElementById('marca-id').value}`
+      : 'http://localhost:3000/marcas';
+    
+    response = await fetch(url, {
+      method: modoEdicion ? 'PUT' : 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-    })
-    .then(res => res.json())
-    .then(marcas => {
-      const tbody = document.querySelector('#tablaInventario tbody');
+      body: JSON.stringify(marca)
+    });
+    
+    if (!response.ok) {
+      throw new Error(modoEdicion ? 'Error al actualizar la marca' : 'Error al crear la marca');
+    }
+    
+    // Recargar marcas
+    await cargarMarcas();
+    cerrarModal();
+    
+  } catch (error) {
+    console.error('Error al guardar marca:', error);
+    alert('Error: ' + error.message);
+  }
+}
 
-      if (Array.isArray(marcas)) {
-        marcas.forEach(marcas => {
-          const fila = document.createElement('tr');
-          fila.innerHTML = `
-           <td>${marcas.id_marca}</td>
-            
-            <td>${marcas.nombre}</td>
-           
-           
-          `;
-          tbody.appendChild(fila);
-        });
-      } else {
-        console.error('No se pudo cargar el inventario:', marcas);
-      }
-    })
-    .catch(error => {
-      console.error('Error al cargar el inventario:', error);
+// Eliminar marca
+async function eliminarMarca(event) {
+  const id = event.target.dataset.id;
+  
+  if (!confirm('¿Estás seguro de eliminar esta marca?')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`http://localhost:3000/marcas/${id}`, {
+      method: 'DELETE'
     });
-  </script>
-  <script>
-  // Lógica de búsqueda por cualquier texto en la tabla
-  document.getElementById('buscador').addEventListener('input', function () {
-    const filtro = this.value.toLowerCase();
-    const filas = document.querySelectorAll('#tablaInventario tbody tr');
+    
+    if (!response.ok) {
+      throw new Error('Error al eliminar la marca');
+    }
+    
+    // Recargar marcas
+    await cargarMarcas();
+    
+  } catch (error) {
+    console.error('Error al eliminar marca:', error);
+    alert('Error al eliminar la marca: ' + error.message);
+  }
+}
 
-    filas.forEach(fila => {
-      const textoFila = fila.innerText.toLowerCase();
-      if (textoFila.includes(filtro)) {
-        fila.style.display = '';
-      } else {
-        fila.style.display = 'none';
-      }
-    });
-  });
-</script>
-<script>
-    const tbody = document.querySelector('#tablaInventario tbody');
-    const buscador = document.getElementById('buscador');
-  
-    // Crear mensaje "No existe"
-    const mensajeNoExiste = document.createElement('tr');
-    mensajeNoExiste.innerHTML = `<td colspan="2" style="text-align: center; padding: 10px;">No existe en el inventario</td>`;
-    mensajeNoExiste.style.display = 'none';
-    tbody.appendChild(mensajeNoExiste);
-  
-    // Obtener marcas desde la API y construir la tabla
-    fetch('http://localhost:3000/marcas')
-      .then(res => res.json())
-      .then(marcas => {
-        if (Array.isArray(marcas)) {
-          marcas.forEach(marca => {
-            const fila = document.createElement('tr');
-            fila.innerHTML = `
-              <td>${marca.id_marca}</td>
-              <td>${marca.nombre}</td>
-            `;
-            tbody.insertBefore(fila, mensajeNoExiste);
-          });
-        } else {
-          console.error('No se pudo cargar el inventario:', marcas);
-        }
-      })
-      .catch(error => {
-        console.error('Error al cargar el inventario:', error);
-      });
-  
-    // Búsqueda con resaltado y manejo de espacios vacíos
-    buscador.addEventListener('input', function () {
-      const filtro = this.value.trim().toLowerCase();
-      const filas = tbody.querySelectorAll('tr:not(:last-child)');
-      let hayCoincidencia = false;
-  
-      filas.forEach(fila => {
-        const celdas = fila.querySelectorAll('td');
-        let coincide = false;
-  
-        celdas.forEach(celda => {
-          const textoOriginal = celda.textContent;
-          const textoLower = textoOriginal.toLowerCase();
-  
-          if (filtro && textoLower.includes(filtro)) {
-            const regex = new RegExp(`(${filtro})`, 'gi');
-            celda.innerHTML = textoOriginal.replace(regex, `<span style="background-color: #a8ffae; border-radius: 4px;">$1</span>`);
-            coincide = true;
-          } else {
-            celda.innerHTML = textoOriginal; // restaurar sin resaltado
-          }
-        });
-  
-        fila.style.display = (!filtro || coincide) ? '' : 'none';
-        if (coincide || !filtro) hayCoincidencia = true;
-      });
-  
-      mensajeNoExiste.style.display = (!hayCoincidencia && filtro) ? '' : 'none';
-    });
-  </script>
-  
-  
+// Cerrar modal
+function cerrarModal() {
+  modal.style.display = 'none';
+  marcaEditando = null;
+  form.reset();
+}
+
+// Event listeners
+buscador.addEventListener('input', () => buscarMarcas(buscador.value));
+refreshBtn.addEventListener('click', cargarMarcas);
+addBtn.addEventListener('click', abrirModalNueva);
+closeModal.addEventListener('click', cerrarModal);
+cancelModal.addEventListener('click', cerrarModal);
+form.addEventListener('submit', guardarMarca);
+
+// Cargar marcas al iniciar
+cargarMarcas();</script>
 </body>
 </html>

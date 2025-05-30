@@ -253,7 +253,7 @@
       
       if (isNaN(cantidad) || cantidad <= 0) {
         alert('Por favor ingresa una cantidad válida.');
-        return;
+        return; 
       }
       
       if (cantidad > productoActual.stock) {
@@ -335,7 +335,7 @@
 
     // Generar factura
     // Función corregida para generar factura con el formato específico
-    function generarFactura() {
+     async function generarFactura() {
       if (productosSeleccionados.length === 0) {
         alert('No hay productos para facturar.');
         return;
@@ -353,86 +353,101 @@
       }
       
       const ahora = new Date();
-      const fecha_fact = ahora.toLocaleString(); // Fecha y hora combinadas
+      const fecha_fact = ahora.toLocaleString();
       
       // Formatear productos como string en el formato requerido
       const productos_fact = productosSeleccionados.map(p => 
         `und:${p.cantidad}, pro:${p.nombre} (${p.cod_barras || 'N/A'}), pre:${p.precio.toFixed(2)}`
       ).join(' | ');
       
-      // Preparar datos de la factura en el formato exacto requerido
+      // Preparar datos de la factura
       const factura = {
-        fecha_fact: fecha_fact.toString(), // Convertido a varchar
+        fecha_fact: fecha_fact,
         cliente: clienteInput.value.trim(),
         productos_fact: productos_fact,
-        usuario_factura: vendedor, // Asegurando que coincida con el nombre de columna en la BD
-        total: parseFloat(totalFinal.textContent.replace('$', '')) // Enviado como número
+        usuario_factura: vendedor,
+        total: parseFloat(totalFinal.textContent.replace('$', ''))
       };
       
-      console.log('Datos a enviar:', factura); // Para verificación
-      
-      // Enviar factura a la API con el formato corregido
-      fetch('http://localhost:3000/facturacion', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(factura)
-      })
-      .then(response => {
-        if (!response.ok) {
-          return response.json().then(err => { throw new Error(err.message || 'Error al guardar la factura'); });
-        }
-        return response.json();
-      })
-      .then(data => {
-        // Actualizar stock de productos
-        actualizarStocks();
-      })
-      .catch(error => {
-        console.error('Error:', error);
-        alert('Error al generar la factura: ' + error.message);
-      });
-    }
-
-
-    // Actualizar stocks después de facturar
-    function actualizarStocks() {
-      const actualizaciones = productosSeleccionados.map(producto => {
-        const nuevoStock = producto.stock_original - producto.cantidad;
-        
-        if (nuevoStock <= 0) {
-          // Eliminar producto si stock llega a 0 o menos
-          return fetch(`http://localhost:3000/productos/${producto.id_producto}`, {
-            method: 'DELETE'
-          });
-        } else {
-          // Actualizar stock del producto
-          return fetch(`http://localhost:3000/productos/${producto.id_producto}/stock`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ nuevo_stock: nuevoStock })
-          });
-        }
-      });
-      
-      Promise.all(actualizaciones)
-        .then(() => {
-          alert('Factura generada y stocks actualizados correctamente.');
-          // Limpiar todo después de facturar
-          productosSeleccionados = [];
-          listaProductos.innerHTML = '';
-          totalFinal.textContent = '$0.00';
-          clienteInput.value = '';
-          cargarProductos(); // Recargar productos para actualizar stocks
-        })
-        .catch(error => {
-          console.error('Error al actualizar stocks:', error);
-          alert('Factura generada pero hubo un error al actualizar los stocks.');
+      try {
+        // 1. Guardar la factura
+        const responseFactura = await fetch('http://localhost:3000/facturacion', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(factura)
         });
+        
+        if (!responseFactura.ok) {
+          const errorData = await responseFactura.json();
+          throw new Error(errorData.message || 'Error al guardar la factura');
+        }
+        
+        // 2. Actualizar stocks
+        await actualizarStocks();
+        
+        // 3. Limpiar y mostrar mensaje
+        productosSeleccionados = [];
+        listaProductos.innerHTML = '';
+        totalFinal.textContent = '$0.00';
+        clienteInput.value = '';
+        vendedorInput.value = '';
+        
+        alert('Factura generada y stocks actualizados correctamente.');
+        cargarProductos(); // Recargar productos para actualizar stocks
+        
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error: ' + error.message);
+      }
     }
+
+    // Función corregida para actualizar stocks
+    async function actualizarStocks() {
+    try {
+        for (const producto of productosSeleccionados) {
+            const nuevoStock = producto.stock_original - producto.cantidad;
+            
+            if (nuevoStock < 0) {
+                console.error(`Stock negativo para producto ${producto.id_producto}`);
+                continue;
+            }
+
+            const response = await fetch(`http://localhost:3000/productos/${producto.id_producto}/stock`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ stock: nuevoStock })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || `Error al actualizar stock del producto ${producto.id_producto}`);
+            }
+
+            console.log(`Stock actualizado:`, data);
+        }
+    } catch (error) {
+        console.error('Error detallado:', {
+            error: error.message,
+            productosEnProceso: productosSeleccionados.map(p => ({
+                id: p.id_producto,
+                nombre: p.nombre,
+                stock_original: p.stock_original,
+                cantidad_vendida: p.cantidad,
+                nuevo_stock_calculado: p.stock_original - p.cantidad
+            }))
+        });
+        throw error;
+    }
+}
+        
+       
+
 
     // Event Listeners
     document.addEventListener('DOMContentLoaded', () => {

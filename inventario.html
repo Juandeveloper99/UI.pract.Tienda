@@ -3,111 +3,325 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventario de Productos</title>
+  <title>Inventario de Productos - Repuestos Nahomi</title>
   <link rel="stylesheet" href="styles.css">
+  
 </head>
 <body>
-  <h1>Repuestos Nahomi</h1>
+  <header class="inventario-header">
+    <h1 class="inventario-business-title">Repuestos Nahomi</h1>
+    <nav class="inventario-nav-bar">
+      <a href="index.html">Ingresar</a>
+      <a href="marca.html">Marca</a>
+      <a href="facturacion.html">Facturación</a>
+      <a href="inventario.html">Inventario</a>
+      <a href="ventas.html">Ventas</a>
+    </nav>
+  </header>
 
-  <nav class="nav-bar">
-    <a href="index.html">Ingresar</a>
-    <a href="marca.html">Marca</a>
-    <a href="facturacion.html">Facturación</a>
-    <a href="inventario.html">Inventario</a>
-    <a href="ventas.html">Ventas</a>
-  </nav>
+  <div class="inventario-container">
+    <h2 class="inventario-title">Gestión de Inventario</h2>
 
-  <div class="container">
-    <h1>Inventario de Productos</h1>
+    <!-- Barra de búsqueda y acciones -->
+    <div class="inventario-search-section">
+      <div class="inventario-search-group">
+        <input type="text" id="inventario-buscador" class="inventario-search-input" placeholder="Buscar productos...">
+        <button id="inventario-refresh-btn" class="inventario-refresh-button">↻ Actualizar</button>
+      </div>
+    </div>
 
-    <!-- Buscador separado de la tabla pero visualmente cerca -->
-    <input type="text" id="buscador" placeholder="Buscar en el inventario..." style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #ccc;">
+    <!-- Tabla de inventario -->
+    <div class="inventario-table-container">
+      <table id="inventario-tabla" class="inventario-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Categoría</th>
+            <th>Marca</th>
+            <th>Código</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="inventario-tbody">
+          <!-- Filas se generarán dinámicamente -->
+        </tbody>
+      </table>
+    </div>
 
-    <table id="tablaInventario">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Descripción</th>
-          <th>Precio</th>
-          <th>Stock</th>
-          <th>Categorías</th>
-          <th>Marcas</th>
-          <th>Código de Barras</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Se llenará dinámicamente -->
-      </tbody>
-    </table>
+    <!-- Mensaje cuando no hay resultados -->
+    <div id="inventario-no-results" class="inventario-no-results">
+      No se encontraron productos
+    </div>
+  </div>
+
+  <!-- Modal para edición -->
+  <div id="inventario-modal" class="inventario-modal">
+    <div class="inventario-modal-content">
+      <span class="inventario-modal-close">&times;</span>
+      <h3>Editar Producto</h3>
+      <form id="inventario-edit-form">
+        <input type="hidden" id="edit-producto-id">
+        
+        <div class="inventario-form-group">
+          <label for="edit-producto-nombre">Nombre:</label>
+          <input type="text" id="edit-producto-nombre" required>
+        </div>
+        
+        <div class="inventario-form-group">
+          <label for="edit-producto-descripcion">Descripción:</label>
+          <textarea id="edit-producto-descripcion" rows="3"></textarea>
+        </div>
+        
+        <div class="inventario-form-row">
+          <div class="inventario-form-group inventario-price-field">
+            <label for="edit-producto-precio">Precio ($):</label>
+            <input type="number" id="edit-producto-precio" step="0.01" min="0" required>
+          </div>
+          
+          <div class="inventario-form-group inventario-stock-field">
+            <label for="edit-producto-stock">Stock:</label>
+            <input type="number" id="edit-producto-stock" min="0" required>
+          </div>
+        </div>
+        
+        <div class="inventario-form-group">
+          <label for="edit-producto-codigo">Código Barras:</label>
+          <input type="text" id="edit-producto-codigo">
+        </div>
+        
+        <div class="inventario-form-actions">
+          <button type="submit" class="inventario-save-button">Guardar Cambios</button>
+          <button type="button" class="inventario-cancel-button">Cancelar</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script>
-    const tbody = document.querySelector('#tablaInventario tbody');
-    const buscador = document.getElementById('buscador');
-  
-    // Crear mensaje "No existe"
-    const mensajeNoExiste = document.createElement('tr');
-    mensajeNoExiste.innerHTML = `<td colspan="7" style="text-align: center; padding: 10px;">No existe en el inventario</td>`;
-    mensajeNoExiste.style.display = 'none';
-    tbody.appendChild(mensajeNoExiste);
-  
+    // Elementos del DOM
+    const tbody = document.getElementById('inventario-tbody');
+    const buscador = document.getElementById('inventario-buscador');
+    const refreshBtn = document.getElementById('inventario-refresh-btn');
+    const noResultsMsg = document.getElementById('inventario-no-results');
+    const modal = document.getElementById('inventario-modal');
+    const closeModal = document.querySelector('.inventario-modal-close');
+    const cancelModal = document.querySelector('.inventario-cancel-button');
+    const editForm = document.getElementById('inventario-edit-form');
+    
+    // Variables globales
+    let productos = [];
+    let productoEditando = null;
+
     // Cargar productos desde la API
-    fetch('http://localhost:3000/productos')
-      .then(res => res.json())
-      .then(productos => {
-        if (Array.isArray(productos)) {
-          productos.forEach(producto => {
-            const fila = document.createElement('tr');
-            fila.innerHTML = `
-              <td>${producto.nombre}</td>
-              <td>${producto.descripcion}</td>
-              <td>$${producto.precio}</td>
-              <td>${producto.stock}</td>
-              <td>${producto.nombre_categoria}</td>
-              <td>${producto.nombre_marca}</td>
-              <td>${producto.cod_barras}</td>
-            `;
-            tbody.insertBefore(fila, mensajeNoExiste);
-          });
-        } else {
-          console.error('No se pudo cargar el inventario:', productos);
+    async function cargarProductos() {
+      try {
+        const response = await fetch('http://localhost:3000/productos');
+        productos = await response.json();
+        
+        if (!Array.isArray(productos)) {
+          throw new Error('Formato de respuesta inválido');
         }
-      })
-      .catch(error => {
-        console.error('Error al cargar el inventario:', error);
+        
+        renderizarProductos(productos);
+        noResultsMsg.style.display = 'none';
+      } catch (error) {
+        console.error('Error al cargar productos:', error);
+        noResultsMsg.textContent = 'Error al cargar el inventario';
+        noResultsMsg.style.display = 'block';
+      }
+    }
+
+    // Renderizar productos en la tabla
+    function renderizarProductos(productosFiltrados) {
+      tbody.innerHTML = '';
+      
+      if (productosFiltrados.length === 0) {
+        noResultsMsg.style.display = 'block';
+        return;
+      }
+      
+      noResultsMsg.style.display = 'none';
+      
+      productosFiltrados.forEach(producto => {
+        const fila = document.createElement('tr');
+        fila.dataset.id = producto.id_producto;
+        fila.innerHTML = `
+          <td>${producto.nombre || 'N/A'}</td>
+          <td>${producto.descripcion || 'N/A'}</td>
+          <td>$${Number(producto.precio).toFixed(2)}</td>
+          <td class="${producto.stock <= 5 ? 'inventario-low-stock' : ''}">${producto.stock}</td>
+          <td>${producto.nombre_categoria || 'N/A'}</td>
+          <td>${producto.nombre_marca || 'N/A'}</td>
+          <td>${producto.cod_barras || 'N/A'}</td>
+          <td class="inventario-actions-cell">
+            <button class="inventario-edit-button" data-id="${producto.id_producto}">✏️ Editar</button>
+            <button class="inventario-delete-button" data-id="${producto.id_producto}">🗑️ Eliminar</button>
+          </td>
+        `;
+        tbody.appendChild(fila);
       });
-  
-    // Función de búsqueda con validaciones mejoradas
-    buscador.addEventListener('input', function () {
-      const filtro = this.value.trim().toLowerCase();
-      const filas = tbody.querySelectorAll('tr:not(:last-child)');
-      let hayCoincidencia = false;
-  
-      filas.forEach(fila => {
-        const celdas = fila.querySelectorAll('td');
-        let coincide = false;
-  
-        celdas.forEach(celda => {
-          const textoOriginal = celda.textContent;
-          const textoLower = textoOriginal.toLowerCase();
-  
-          if (filtro && textoLower.includes(filtro)) {
-            const regex = new RegExp(`(${filtro})`, 'gi');
-            celda.innerHTML = textoOriginal.replace(regex, `<span style="background-color: #a8ffae; border-radius: 4px;">$1</span>`);
-            coincide = true;
-          } else {
-            celda.innerHTML = textoOriginal; // restaurar
-          }
+      
+      // Agregar event listeners a los botones
+      document.querySelectorAll('.inventario-edit-button').forEach(btn => {
+        btn.addEventListener('click', abrirModalEdicion);
+      });
+      
+      document.querySelectorAll('.inventario-delete-button').forEach(btn => {
+        btn.addEventListener('click', eliminarProducto);
+      });
+    }
+
+    // Función de búsqueda con resaltado
+    function buscarProductos(termino) {
+      const filtro = termino.toLowerCase().trim();
+      
+      if (!filtro) {
+        renderizarProductos(productos);
+        return;
+      }
+      
+      const resultados = productos.filter(producto => {
+        return (
+          producto.nombre.toLowerCase().includes(filtro) ||
+          (producto.descripcion && producto.descripcion.toLowerCase().includes(filtro)) ||
+          (producto.cod_barras && producto.cod_barras.toLowerCase().includes(filtro)) ||
+          (producto.nombre_categoria && producto.nombre_categoria.toLowerCase().includes(filtro)) ||
+          (producto.nombre_marca && producto.nombre_marca.toLowerCase().includes(filtro))
+        );
+      });
+      
+      // Resaltar coincidencias en los resultados
+      const resultadosConResaltado = resultados.map(producto => {
+        const productoResaltado = {...producto};
+        
+        // Función para resaltar texto
+        const resaltarTexto = (texto) => {
+          if (!texto) return texto;
+          const regex = new RegExp(`(${filtro.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+          return texto.replace(regex, '<span class="inventario-resaltado">$1</span>');
+        };
+        
+        // Aplicar resaltado a todos los campos buscables
+        productoResaltado.nombre = resaltarTexto(producto.nombre);
+        productoResaltado.descripcion = resaltarTexto(producto.descripcion);
+        productoResaltado.cod_barras = resaltarTexto(producto.cod_barras);
+        productoResaltado.nombre_categoria = resaltarTexto(producto.nombre_categoria);
+        productoResaltado.nombre_marca = resaltarTexto(producto.nombre_marca);
+        
+        return productoResaltado;
+      });
+      
+      renderizarProductos(resultadosConResaltado);
+      
+      if (termino && resultados.length === 0) {
+        noResultsMsg.textContent = `No se encontraron productos para "${termino}"`;
+        noResultsMsg.style.display = 'block';
+      }
+    }
+
+    // Abrir modal de edición
+    function abrirModalEdicion(event) {
+      const id = event.target.dataset.id;
+      productoEditando = productos.find(p => p.id_producto == id);
+      
+      if (!productoEditando) return;
+      
+      // Llenar el formulario
+      document.getElementById('edit-producto-id').value = productoEditando.id_producto;
+      document.getElementById('edit-producto-nombre').value = productoEditando.nombre;
+      document.getElementById('edit-producto-descripcion').value = productoEditando.descripcion || '';
+      document.getElementById('edit-producto-precio').value = productoEditando.precio;
+      document.getElementById('edit-producto-stock').value = productoEditando.stock;
+      document.getElementById('edit-producto-codigo').value = productoEditando.cod_barras || '';
+      
+      // Mostrar modal
+      modal.style.display = 'block';
+    }
+
+    // Guardar cambios del producto
+    async function guardarCambios(event) {
+      event.preventDefault();
+      
+      const productoActualizado = {
+        id_producto: document.getElementById('edit-producto-id').value,
+        nombre: document.getElementById('edit-producto-nombre').value,
+        descripcion: document.getElementById('edit-producto-descripcion').value,
+        precio: document.getElementById('edit-producto-precio').value,
+        stock: document.getElementById('edit-producto-stock').value,
+        cod_barras: document.getElementById('edit-producto-codigo').value,
+        // Mantener categoría y marca (no editables en este ejemplo)
+        categoria_id: productoEditando.categoria_id,
+        marca_id: productoEditando.marca_id
+      };
+      
+      try {
+        const response = await fetch(`http://localhost:3000/productos/${productoActualizado.id_producto}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(productoActualizado)
         });
-  
-        fila.style.display = (!filtro || coincide) ? '' : 'none';
-        if (coincide || !filtro) hayCoincidencia = true;
-      });
-  
-      // Mostrar el mensaje solo si no hay coincidencias Y hay algo escrito
-      mensajeNoExiste.style.display = (!hayCoincidencia && filtro) ? '' : 'none';
-    });
+        
+        if (!response.ok) {
+          throw new Error('Error al actualizar el producto');
+        }
+        
+        // Recargar productos
+        await cargarProductos();
+        cerrarModal();
+        
+      } catch (error) {
+        console.error('Error al guardar cambios:', error);
+        alert('Error al actualizar el producto: ' + error.message);
+      }
+    }
+
+    // Eliminar producto
+    async function eliminarProducto(event) {
+      const id = event.target.dataset.id;
+      
+      if (!confirm('¿Estás seguro de eliminar este producto?')) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`http://localhost:3000/productos/${id}`, {
+          method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al eliminar el producto');
+        }
+        
+        // Recargar productos
+        await cargarProductos();
+        
+      } catch (error) {
+        console.error('Error al eliminar producto:', error);
+        alert('Error al eliminar el producto: ' + error.message);
+      }
+    }
+
+    // Cerrar modal
+    function cerrarModal() {
+      modal.style.display = 'none';
+      productoEditando = null;
+      editForm.reset();
+    }
+
+    // Event listeners
+    buscador.addEventListener('input', () => buscarProductos(buscador.value));
+    refreshBtn.addEventListener('click', cargarProductos);
+    closeModal.addEventListener('click', cerrarModal);
+    cancelModal.addEventListener('click', cerrarModal);
+    editForm.addEventListener('submit', guardarCambios);
+
+    // Cargar productos al iniciar
+    cargarProductos();
   </script>
-  
 </body>
 </html>
