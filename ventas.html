@@ -3,21 +3,292 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interfaz Horizontal para Productos</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Historial de Facturas - Repuestos Nahomi</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .header h1 {
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+    
+    .facturas-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 25px;
+    }
+    
+    .factura-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 25px;
+      transition: transform 0.3s ease;
+    }
+    
+    .factura-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+    
+    .factura-header {
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 15px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .factura-id {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    
+    .factura-fecha {
+      color: #7f8c8d;
+      font-size: 0.9rem;
+      align-self: flex-end;
+    }
+    
+    .factura-cliente {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+    }
+    
+    .factura-vendedor {
+      color: #7f8c8d;
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+    
+    .productos-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    
+    .productos-table th {
+      background-color: #34495e;
+      color: white;
+      padding: 10px;
+      text-align: left;
+    }
+    
+    .productos-table td {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .productos-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .productos-table tr:hover {
+      background-color: #f8f9fa;
+    }
+    
+    .total-section {
+      text-align: right;
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 2px solid #3498db;
+    }
+    
+    .total-label {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    
+    .total-amount {
+      font-size: 1.5rem;
+      color: #2c3e50;
+      font-weight: bold;
+    }
+    
+    .loading {
+      text-align: center;
+      font-size: 1.2rem;
+      color: #7f8c8d;
+      padding: 50px;
+    }
+    
+    .error {
+      color: #e74c3c;
+      text-align: center;
+      padding: 20px;
+      font-weight: bold;
+    }
+    
+    @media print {
+      body {
+        background-color: white;
+        padding: 0;
+      }
+      
+      .factura-card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+      }
+      
+      .header {
+        display: none;
+      }
+    }
+  </style>
 </head>
-<link rel="stylesheet" href="styles.css" /> 
 <body>
-  <h1>
-     <!-- titulo negocio -->
-    Repuestos Nahomi
-  </h1>
-      <!-- Navegación horizontal superior -->
-<nav class="nav-bar">
-  <a href="index.html" >Ingresar</a>
-  <a href="marca.html" >Marca</a>
-  <a href="facturacion.html" >Facturación</a>
-  <a href="inventario.html" >Inventario</a>
-  <a href="ventas.html" >Ventas</a>
-</nav>
+  <div class="header">
+    <h1>Repuestos Nahomi</h1>
+    <h2>Historial de Facturas</h2>
+  </div>
+  
+  <div id="facturas-container" class="facturas-container">
+    <div class="loading">Cargando facturas...</div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const container = document.getElementById('facturas-container');
+      
+      // Función para formatear la fecha
+      function formatFecha(fechaStr) {
+        try {
+          const fecha = new Date(fechaStr);
+          return fecha.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        } catch (e) {
+          return fechaStr; // Si hay error, devolver el original
+        }
+      }
+      
+      // Función para parsear los productos
+      function parseProductos(productosStr) {
+        try {
+          // Separar los productos por el pipe |
+          const productos = productosStr.split(' | ');
+          
+          return productos.map(item => {
+            // Extraer los componentes de cada producto
+            const unidadesMatch = item.match(/und:(\d+)/);
+            const productoMatch = item.match(/pro:([^,]+)/);
+            const precioMatch = item.match(/pre:([\d.]+)/);
+            
+            return {
+              unidades: unidadesMatch ? parseInt(unidadesMatch[1]) : 0,
+              producto: productoMatch ? productoMatch[1].trim() : 'Producto desconocido',
+              precio: precioMatch ? parseFloat(precioMatch[1]) : 0
+            };
+          });
+        } catch (e) {
+          console.error('Error al parsear productos:', e);
+          return [];
+        }
+      }
+      
+      // Función para formatear dinero
+      function formatMoney(amount) {
+        return new Intl.NumberFormat('es-ES', {
+          style: 'currency',
+          currency: 'USD'
+        }).format(amount);
+      }
+      
+      // Función para renderizar las facturas
+      function renderFacturas(facturas) {
+        if (facturas.length === 0) {
+          container.innerHTML = '<div class="error">No se encontraron facturas</div>';
+          return;
+        }
+        
+        container.innerHTML = '';
+        
+        facturas.forEach(factura => {
+          const productos = parseProductos(factura.productos_fact);
+          const total = parseFloat(factura.total);
+          
+          const facturaHTML = `
+            <div class="factura-card">
+              <div class="factura-header">
+                <div class="factura-id">Factura #${factura.factura_id}</div>
+                <div class="factura-fecha">${formatFecha(factura.fecha_fact)}</div>
+              </div>
+              
+              <div class="factura-cliente">Cliente: ${factura.cliente || 'No especificado'}</div>
+              <div class="factura-vendedor">Vendedor: ${factura.usuario_factura || 'No especificado'}</div>
+              
+              <table class="productos-table">
+                <thead>
+                  <tr>
+                    <th>Cantidad</th>
+                    <th>Descripción</th>
+                    <th>Precio Unit.</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${productos.map(p => `
+                    <tr>
+                      <td>${p.unidades}</td>
+                      <td>${p.producto}</td>
+                      <td>${formatMoney(p.precio)}</td>
+                      <td>${formatMoney(p.unidades * p.precio)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+              
+              <div class="total-section">
+                <div class="total-label">Total Factura:</div>
+                <div class="total-amount">${formatMoney(total)}</div>
+              </div>
+            </div>
+          `;
+          
+          container.insertAdjacentHTML('beforeend', facturaHTML);
+        });
+      }
+      
+      // Obtener las facturas desde la API
+      fetch('http://localhost:3000/facturacion')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Error al obtener las facturas');
+          }
+          return response.json();
+        })
+        .then(data => {
+          renderFacturas(data);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          container.innerHTML = `
+            <div class="error">
+              Error al cargar las facturas: ${error.message}
+              <br><br>
+              <button onclick="location.reload()">Reintentar</button>
+            </div>
+          `;
+        });
+    });
+  </script>
 </body>
+</html>
