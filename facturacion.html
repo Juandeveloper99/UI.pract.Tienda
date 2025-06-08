@@ -333,9 +333,8 @@
       sugerencias.innerHTML = '';
     }
 
-    // Generar factura
-    // Función corregida para generar factura con el formato específico
-     async function generarFactura() {
+    // Función para generar factura
+    async function generarFactura() {
       if (productosSeleccionados.length === 0) {
         alert('No hay productos para facturar.');
         return;
@@ -384,7 +383,7 @@
           throw new Error(errorData.message || 'Error al guardar la factura');
         }
         
-        // 2. Actualizar stocks
+        // 2. Actualizar stocks con PATCH
         await actualizarStocks();
         
         // 3. Limpiar y mostrar mensaje
@@ -403,51 +402,44 @@
       }
     }
 
-    // Función corregida para actualizar stocks
+    // Función para actualizar stocks con PATCH
     async function actualizarStocks() {
-    try {
+      try {
         for (const producto of productosSeleccionados) {
-            const nuevoStock = producto.stock_original - producto.cantidad;
-            
-            if (nuevoStock < 0) {
-                console.error(`Stock negativo para producto ${producto.id_producto}`);
-                continue;
-            }
+          const nuevoStock = producto.stock_original - producto.cantidad;
+          
+          // Actualizar el stock sin importar si llega a 0 o no
+          const response = await fetch(`http://localhost:3000/productos/${producto.id_producto}/stock`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ stock: nuevoStock })
+          });
 
-            const response = await fetch(`http://localhost:3000/productos/${producto.id_producto}/stock`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({ stock: nuevoStock })
-            });
+          const data = await response.json();
 
-            const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.error || `Error al actualizar stock del producto ${producto.id_producto}`);
+          }
 
-            if (!response.ok || !data.success) {
-                throw new Error(data.error || `Error al actualizar stock del producto ${producto.id_producto}`);
-            }
-
-            console.log(`Stock actualizado:`, data);
+          console.log(`Stock actualizado:`, data);
         }
-    } catch (error) {
+      } catch (error) {
         console.error('Error detallado:', {
-            error: error.message,
-            productosEnProceso: productosSeleccionados.map(p => ({
-                id: p.id_producto,
-                nombre: p.nombre,
-                stock_original: p.stock_original,
-                cantidad_vendida: p.cantidad,
-                nuevo_stock_calculado: p.stock_original - p.cantidad
-            }))
+          error: error.message,
+          productosEnProceso: productosSeleccionados.map(p => ({
+            id: p.id_producto,
+            nombre: p.nombre,
+            stock_original: p.stock_original,
+            cantidad_vendida: p.cantidad,
+            nuevo_stock_calculado: p.stock_original - p.cantidad
+          }))
         });
         throw error;
+      }
     }
-}
-        
-       
-
 
     // Event Listeners
     document.addEventListener('DOMContentLoaded', () => {
