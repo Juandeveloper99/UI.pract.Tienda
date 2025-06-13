@@ -159,7 +159,6 @@
         })
         .catch(error => {
           console.error('Error al cargar productos:', error);
-          alert('Error al cargar los productos. Por favor recarga la página.');
         });
     }
 
@@ -245,19 +244,12 @@
     // Agregar producto a la lista de facturación
     function agregarProductoAFactura() {
       if (!productoActual) {
-        alert('Por favor selecciona un producto primero.');
         return;
       }
       
       const cantidad = parseInt(cantidadInput.value);
       
-      if (isNaN(cantidad) || cantidad <= 0) {
-        alert('Por favor ingresa una cantidad válida.');
-        return; 
-      }
-      
-      if (cantidad > productoActual.stock) {
-        alert(`No hay suficiente stock. Stock disponible: ${productoActual.stock}`);
+      if (isNaN(cantidad)) {
         return;
       }
       
@@ -333,28 +325,24 @@
       sugerencias.innerHTML = '';
     }
 
-    // Función para generar factura
-    async function generarFactura() {
+    // Generar factura
+    function generarFactura() {
       if (productosSeleccionados.length === 0) {
-        alert('No hay productos para facturar.');
-        return;
-      }
-      
-      if (!clienteInput.value.trim()) {
-        alert('Por favor ingresa el nombre del cliente.');
-        return;
-      }
-      
-      const vendedor = vendedorInput.value.trim();
-      if (!vendedor) {
-        alert('Por favor ingresa el nombre del vendedor.');
         return;
       }
       
       const ahora = new Date();
-      const fecha_fact = ahora.toLocaleString();
       
-      // Formatear productos como string en el formato requerido
+      // Formatear fecha como datetime en formato ISO
+      const fecha_fact = ahora.getFullYear() + '-' +
+  String(ahora.getMonth() + 1).padStart(2, '0') + '-' +
+  String(ahora.getDate()).padStart(2, '0') + ' ' +
+  String(ahora.getHours()).padStart(2, '0') + ':' +
+  String(ahora.getMinutes()).padStart(2, '0') + ':' +
+  String(ahora.getSeconds()).padStart(2, '0');
+
+      
+      // Formatear productos como string
       const productos_fact = productosSeleccionados.map(p => 
         `und:${p.cantidad}, pro:${p.nombre} (${p.cod_barras || 'N/A'}), pre:${p.precio.toFixed(2)}`
       ).join(' | ');
@@ -364,81 +352,29 @@
         fecha_fact: fecha_fact,
         cliente: clienteInput.value.trim(),
         productos_fact: productos_fact,
-        usuario_factura: vendedor,
+        usuario_factura: vendedorInput.value.trim(),
         total: parseFloat(totalFinal.textContent.replace('$', ''))
       };
       
-      try {
-        // 1. Guardar la factura
-        const responseFactura = await fetch('http://localhost:3000/facturacion', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(factura)
-        });
-        
-        if (!responseFactura.ok) {
-          const errorData = await responseFactura.json();
-          throw new Error(errorData.message || 'Error al guardar la factura');
-        }
-        
-        // 2. Actualizar stocks con PATCH
-        await actualizarStocks();
-        
-        // 3. Limpiar y mostrar mensaje
+      // Enviar factura a la API
+      fetch('http://localhost:3000/facturacion', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(factura)
+      })
+      .then(response => response.json())
+      .then(data => {
+        // Limpiar todo después de facturar
         productosSeleccionados = [];
         listaProductos.innerHTML = '';
         totalFinal.textContent = '$0.00';
         clienteInput.value = '';
-        vendedorInput.value = '';
-        
-        alert('Factura generada y stocks actualizados correctamente.');
-        cargarProductos(); // Recargar productos para actualizar stocks
-        
-      } catch (error) {
+      })
+      .catch(error => {
         console.error('Error:', error);
-        alert('Error: ' + error.message);
-      }
-    }
-
-    // Función para actualizar stocks con PATCH
-    async function actualizarStocks() {
-      try {
-        for (const producto of productosSeleccionados) {
-          const nuevoStock = producto.stock_original - producto.cantidad;
-          
-          // Actualizar el stock sin importar si llega a 0 o no
-          const response = await fetch(`http://localhost:3000/productos/${producto.id_producto}/stock`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            },
-            body: JSON.stringify({ stock: nuevoStock })
-          });
-
-          const data = await response.json();
-
-          if (!response.ok || !data.success) {
-            throw new Error(data.error || `Error al actualizar stock del producto ${producto.id_producto}`);
-          }
-
-          console.log(`Stock actualizado:`, data);
-        }
-      } catch (error) {
-        console.error('Error detallado:', {
-          error: error.message,
-          productosEnProceso: productosSeleccionados.map(p => ({
-            id: p.id_producto,
-            nombre: p.nombre,
-            stock_original: p.stock_original,
-            cantidad_vendida: p.cantidad,
-            nuevo_stock_calculado: p.stock_original - p.cantidad
-          }))
-        });
-        throw error;
-      }
+      });
     }
 
     // Event Listeners
@@ -463,13 +399,6 @@
 
     cantidadInput.addEventListener('input', () => {
       if (productoActual) {
-        const cantidad = parseInt(cantidadInput.value) || 0;
-        
-        if (cantidad > productoActual.stock) {
-          alert(`No hay suficiente stock. Stock disponible: ${productoActual.stock}`);
-          cantidadInput.value = productoActual.stock;
-        }
-        
         calcularTotalProducto();
       }
     });
