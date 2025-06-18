@@ -18,8 +18,6 @@
     </nav>
   </header>
 
-   <div class="modal-body" id="modalBody"></div>
-
   <div class="facturacion-container">
     <h2 class="facturacion-form-title">Sistema de Facturación</h2>
     
@@ -326,6 +324,8 @@
       productoActual = null;
       sugerencias.innerHTML = '';
     }
+
+    // Generar factura
     // Función para validar campos obligatorios antes de facturar
 function validarCamposFactura() {
     const camposRequeridos = [
@@ -429,6 +429,5 @@ function generarFactura() {
 // Actualizar el event listener del botón de facturar para usar la nueva función
 facturarBtn.addEventListener('click', generarFactura);
   </script>
-  
 </body>
 </html>
