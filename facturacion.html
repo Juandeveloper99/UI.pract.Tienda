@@ -18,6 +18,8 @@
     </nav>
   </header>
 
+   <div class="modal-body" id="modalBody"></div>
+
   <div class="facturacion-container">
     <h2 class="facturacion-form-title">Sistema de Facturación</h2>
     
@@ -324,100 +326,109 @@
       productoActual = null;
       sugerencias.innerHTML = '';
     }
+    // Función para validar campos obligatorios antes de facturar
+function validarCamposFactura() {
+    const camposRequeridos = [
+        { id: 'cliente', nombre: 'Cliente' },
+        { id: 'vendedor', nombre: 'Vendedor' }
+    ];
+    
+    const camposFaltantes = [];
+    
+    // Verificar cada campo requerido
+    camposRequeridos.forEach(campo => {
+        const elemento = document.getElementById(campo.id);
+        if (!elemento.value.trim()) {
+            camposFaltantes.push(campo.nombre);
+            // Resaltar campo faltante
+            elemento.style.border = '2px solid red';
+            // Quitar el resaltado después de 3 segundos
+            setTimeout(() => {
+                elemento.style.border = '';
+            }, 3000);
+        }
+    });
+    
+    // Verificar si hay productos en la factura
+    if (productosSeleccionados.length === 0) {
+        camposFaltantes.push('al menos un producto en la factura');
+    }
+    
+    // Mostrar alerta si faltan campos
+    if (camposFaltantes.length > 0) {
+        const mensaje = `Por favor complete los siguientes campos:\n\n- ${camposFaltantes.join('\n- ')}`;
+        alert(mensaje);
+        return false;
+    }
+    
+    return true;
+}
 
-    // Generar factura
-    function generarFactura() {
-      if (productosSeleccionados.length === 0) {
+// Modificar la función generarFactura para usar la validación
+function generarFactura() {
+    // Validar campos antes de continuar
+    if (!validarCamposFactura()) {
         return;
-      }
-      
-      const ahora = new Date();
-      
-      // Formatear fecha como datetime en formato ISO
-      const fecha_fact = ahora.getFullYear() + '-' +
-  String(ahora.getMonth() + 1).padStart(2, '0') + '-' +
-  String(ahora.getDate()).padStart(2, '0') + ' ' +
-  String(ahora.getHours()).padStart(2, '0') + ':' +
-  String(ahora.getMinutes()).padStart(2, '0') + ':' +
-  String(ahora.getSeconds()).padStart(2, '0');
+    }
+    
+    if (productosSeleccionados.length === 0) {
+        alert('Debe agregar al menos un producto a la factura');
+        return;
+    }
+    
+    const ahora = new Date();
+    
+    // Formatear fecha como datetime en formato ISO
+    const fecha_fact = ahora.getFullYear() + '-' +
+        String(ahora.getMonth() + 1).padStart(2, '0') + '-' +
+        String(ahora.getDate()).padStart(2, '0') + ' ' +
+        String(ahora.getHours()).padStart(2, '0') + ':' +
+        String(ahora.getMinutes()).padStart(2, '0') + ':' +
+        String(ahora.getSeconds()).padStart(2, '0');
 
-      
-      // Formatear productos como string
-      const productos_fact = productosSeleccionados.map(p => 
+    // Formatear productos como string
+    const productos_fact = productosSeleccionados.map(p => 
         `und:${p.cantidad}, pro:${p.nombre} (${p.cod_barras || 'N/A'}), pre:${p.precio.toFixed(2)}`
-      ).join(' | ');
-      
-      // Preparar datos de la factura
-      const factura = {
+    ).join(' | ');
+    
+    // Preparar datos de la factura
+    const factura = {
         fecha_fact: fecha_fact,
         cliente: clienteInput.value.trim(),
         productos_fact: productos_fact,
         usuario_factura: vendedorInput.value.trim(),
         total: parseFloat(totalFinal.textContent.replace('$', ''))
-      };
-      
-      // Enviar factura a la API
-      fetch('http://localhost:3000/facturacion', {
+    };
+    
+    // Enviar factura a la API
+    fetch('http://localhost:3000/facturacion', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+            'Content-Type': 'application/json'
         },
         body: JSON.stringify(factura)
-      })
-      .then(response => response.json())
-      .then(data => {
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Mostrar mensaje de éxito
+        alert('Factura generada exitosamente');
+        
         // Limpiar todo después de facturar
         productosSeleccionados = [];
         listaProductos.innerHTML = '';
         totalFinal.textContent = '$0.00';
         clienteInput.value = '';
-      })
-      .catch(error => {
+        vendedorInput.value = '';
+    })
+    .catch(error => {
         console.error('Error:', error);
-      });
-    }
-
-    // Event Listeners
-    document.addEventListener('DOMContentLoaded', () => {
-      cargarProductos();
-      setInterval(actualizarFechaHora, 1000);
-      actualizarFechaHora();
+        alert('Ocurrió un error al generar la factura. Por favor intente nuevamente.');
     });
+}
 
-    buscador.addEventListener('input', () => {
-      const termino = buscador.value.trim();
-      
-      if (termino.length < 2) {
-        sugerencias.innerHTML = '';
-        sugerencias.style.display = 'none';
-        return;
-      }
-      
-      const resultados = buscarProductos(termino);
-      mostrarSugerencias(resultados);
-    });
-
-    cantidadInput.addEventListener('input', () => {
-      if (productoActual) {
-        calcularTotalProducto();
-      }
-    });
-
-    precioInput.addEventListener('input', () => {
-      if (productoActual) {
-        calcularTotalProducto();
-      }
-    });
-
-    agregarBtn.addEventListener('click', agregarProductoAFactura);
-    facturarBtn.addEventListener('click', generarFactura);
-
-    // Cerrar sugerencias al hacer clic fuera
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.facturacion-autocomplete-wrapper')) {
-        sugerencias.style.display = 'none';
-      }
-    });
+// Actualizar el event listener del botón de facturar para usar la nueva función
+facturarBtn.addEventListener('click', generarFactura);
   </script>
+  
 </body>
 </html>
