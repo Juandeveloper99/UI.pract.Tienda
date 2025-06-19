@@ -4,7 +4,437 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inventario de Marcas - Repuestos Nahomi</title>
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* [ESTILOS BASE - SIN CAMBIOS] */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f8;
+      color: #333;
+    }
+
+    .marcas-header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 1rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .marcas-business-title {
+      margin: 0;
+      text-align: center;
+      font-size: 1.8rem;
+      padding: 0.5rem 0;
+      color: white;
+    }
+
+    .marcas-nav-bar {
+      display: flex;
+      justify-content: center;
+      background-color: #34495e;
+      padding: 0.5rem 0;
+    }
+
+    .marcas-nav-bar a {
+      color: white;
+      text-decoration: none;
+      padding: 0.5rem 1.5rem;
+      margin: 0 0.2rem;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    .marcas-nav-bar a:hover {
+      background-color: #2980b9;
+    }
+
+    .marcas-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .marcas-title {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 2rem;
+      font-size: 1.5rem;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 0.5rem;
+    }
+
+    .marcas-actions-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .marcas-search-group {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .marcas-search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 0.75rem;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease;
+    }
+
+    .marcas-search-input:focus {
+      border-color: #3498db;
+      outline: none;
+    }
+
+    .marcas-refresh-button,
+    .marcas-add-button {
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+      border: none;
+    }
+
+    .marcas-refresh-button {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .marcas-refresh-button:hover {
+      background-color: #2980b9;
+    }
+
+    .marcas-add-button {
+      background-color: #2ecc71;
+      color: white;
+    }
+
+    .marcas-add-button:hover {
+      background-color: #27ae60;
+    }
+
+    .marcas-table-container {
+      overflow-x: auto;
+    }
+
+    .marcas-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+    }
+
+    .marcas-table th,
+    .marcas-table td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .marcas-table th {
+      background-color: #34495e;
+      color: white;
+      font-weight: 600;
+    }
+
+    .marcas-table tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    .marcas-actions-cell {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .marcas-edit-button,
+    .marcas-delete-button {
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      border: none;
+    }
+
+    .marcas-edit-button {
+      background-color: #f39c12;
+      color: white;
+    }
+
+    .marcas-edit-button:hover {
+      background-color: #e67e22;
+    }
+
+    .marcas-delete-button {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    .marcas-delete-button:hover {
+      background-color: #c0392b;
+    }
+
+    .marcas-resaltado {
+      background-color: #f1c40f;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+
+    .marcas-no-results {
+      text-align: center;
+      padding: 2rem;
+      color: #7f8c8d;
+      display: none;
+    }
+
+    /* [ESTILOS MODAL - SIN CAMBIOS] */
+    .marcas-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      overflow: auto;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .marcas-modal.active {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .marcas-modal-content {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+      width: 90%;
+      max-width: 500px;
+      padding: 2rem;
+      position: relative;
+      margin: 20px;
+      transform: translateY(-20px);
+      transition: transform 0.3s ease;
+    }
+
+    .marcas-modal.active .marcas-modal-content {
+      transform: translateY(0);
+    }
+
+    .marcas-form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .marcas-form-group label {
+      display: block;
+      margin-bottom: 0.8rem;
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 1rem;
+    }
+
+    .marcas-form-group input {
+      width: 100%;
+      padding: 0.8rem;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+
+    .marcas-form-group input:focus {
+      border-color: #3498db;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+
+    .marcas-form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .marcas-save-button,
+    .marcas-cancel-button {
+      padding: 0.8rem 1.5rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+    }
+
+    .marcas-save-button {
+      background-color: #2ecc71;
+      color: white;
+    }
+
+    .marcas-save-button:hover {
+      background-color: #27ae60;
+    }
+
+    .marcas-cancel-button {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    .marcas-cancel-button:hover {
+      background-color: #c0392b;
+    }
+
+    .marcas-modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #7f8c8d;
+      cursor: pointer;
+      transition: color 0.3s ease;
+      line-height: 1;
+    }
+
+    .marcas-modal-close:hover {
+      color: #e74c3c;
+    }
+
+    .marcas-cancel-button {
+      background-color: #95a5a6;
+      color: white;
+    }
+
+    .marcas-cancel-button:hover {
+      background-color: #7f8c8d;
+    }
+
+    @media (max-width: 768px) {
+      .marcas-search-group {
+        flex-direction: column;
+      }
+      
+      .marcas-search-input,
+      .marcas-refresh-button,
+      .marcas-add-button {
+        width: 100%;
+      }
+      
+      .marcas-actions-cell {
+        flex-direction: column;
+      }
+      
+      .marcas-form-actions {
+        flex-direction: column;
+      }
+      
+      .marcas-save-button,
+      .marcas-cancel-button {
+        width: 100%;
+      }
+    }
+
+    /* [ESTILOS ALERTAS - MODIFICADOS] */
+    /* Contenedor principal de alertas */
+    .marcas-alert-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2000;
+      min-width: 300px;
+      max-width: 90%;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    /* Alertas visibles */
+    .marcas-alert-container.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Estilos base para alertas */
+    .marcas-alert {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      overflow: hidden;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+
+    /* Animación cuando se muestra */
+    .marcas-alert-container.show .marcas-alert {
+      transform: translateY(0);
+    }
+
+    /* Cabecera de alerta */
+    .marcas-alert-header {
+      padding: 1rem 1.5rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: white;
+    }
+
+    /* Tipos de alertas */
+    .marcas-alert-success .marcas-alert-header {
+      background-color: #27ae60;
+    }
+
+    .marcas-alert-error .marcas-alert-header {
+      background-color: #e74c3c;
+    }
+
+    .marcas-alert-warning .marcas-alert-header {
+      background-color: #f39c12;
+    }
+
+    .marcas-alert-info .marcas-alert-header {
+      background-color: #3498db;
+    }
+
+    /* Cuerpo de la alerta */
+    .marcas-alert-body {
+      padding: 1.5rem;
+      color: #333;
+      font-size: 1rem;
+    }
+
+    /* Pie de alerta (opcional) */
+    .marcas-alert-footer {
+      padding: 1rem;
+      display: flex;
+      justify-content: flex-end;
+      border-top: 1px solid #eee;
+    }
+
+    /* Efecto de desvanecimiento automático */
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .marcas-alert-auto-hide {
+      animation: fadeOut 3s forwards;
+    }
+  </style>
 </head>
 <body>
   <header class="marcas-header">
@@ -27,8 +457,50 @@
         <input type="text" id="marcas-buscador" class="marcas-search-input" placeholder="Buscar marcas...">
         <button id="marcas-refresh-btn" class="marcas-refresh-button">↻ Actualizar</button>
         <button id="marcas-add-btn" class="marcas-add-button">＋ Nueva Marca</button>
+       <button class="categorias-boton" onclick="window.location.href='categorias.html'">＋ Categorias</button>
+
       </div>
     </div>
+
+    
+
+    <style>
+
+      /* Botón para ir a Categorías */
+.categorias-boton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+  border: none;
+  background-color: #9034db;
+  color: white;
+}
+
+.categorias-boton:hover {
+  background-color: #710ba0;
+}
+
+     
+    .categoirias.boton {
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.3s ease;
+      border: none;
+    }
+
+    .categoirias.boton {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .categoirias.boton:hover {
+      background-color: #2980b9;
+    }
+    </style>
 
     <!-- Tabla de marcas -->
     <div class="marcas-table-container">
@@ -73,228 +545,376 @@
     </div>
   </div>
 
-  <script >// Elementos del DOM
-const tbody = document.getElementById('marcas-tbody');
-const buscador = document.getElementById('marcas-buscador');
-const refreshBtn = document.getElementById('marcas-refresh-btn');
-const addBtn = document.getElementById('marcas-add-btn');
-const noResultsMsg = document.getElementById('marcas-no-results');
-const modal = document.getElementById('marcas-modal');
-const closeModal = document.querySelector('.marcas-modal-close');
-const cancelModal = document.querySelector('.marcas-cancel-button');
-const form = document.getElementById('marcas-form');
-const modalTitle = document.getElementById('marcas-modal-title');
+  <!-- [ALERTAS MEJORADAS] -->
+  <!-- Contenedor para alertas flotantes -->
+  <div id="marcas-alert-container" class="marcas-alert-container">
+    <div id="marcas-alert" class="marcas-alert">
+      <div id="marcas-alert-header" class="marcas-alert-header"></div>
+      <div id="marcas-alert-body" class="marcas-alert-body"></div>
+    </div>
+  </div>
 
-// Variables globales
-let marcas = [];
-let modoEdicion = false;
-let marcaEditando = null;
-
-// Cargar marcas desde la API
-async function cargarMarcas() {
-  try {
-    const response = await fetch('http://localhost:3000/marcas');
-    marcas = await response.json();
+  <script>
+    // Elementos del DOM
+    const tbody = document.getElementById('marcas-tbody');
+    const buscador = document.getElementById('marcas-buscador');
+    const refreshBtn = document.getElementById('marcas-refresh-btn');
+    const addBtn = document.getElementById('marcas-add-btn');
+    const noResultsMsg = document.getElementById('marcas-no-results');
+    const modal = document.getElementById('marcas-modal');
+    const closeModal = document.querySelector('.marcas-modal-close');
+    const cancelModal = document.querySelector('.marcas-cancel-button');
+    const form = document.getElementById('marcas-form');
+    const modalTitle = document.getElementById('marcas-modal-title');
     
-    if (!Array.isArray(marcas)) {
-      throw new Error('Formato de respuesta inválido');
+    // Elementos de las alertas mejoradas
+    const alertContainer = document.getElementById('marcas-alert-container');
+    const alertElement = document.getElementById('marcas-alert');
+    const alertHeader = document.getElementById('marcas-alert-header');
+    const alertBody = document.getElementById('marcas-alert-body');
+
+    // Variables globales
+    let marcas = [];
+    let modoEdicion = false;
+    let marcaEditando = null;
+    let alertTimeout = null;
+
+    // [FUNCIONES DE ALERTA MEJORADAS]
+    /**
+     * Muestra una alerta flotante en el centro de la pantalla
+     * @param {string} title - Título de la alerta
+     * @param {string} message - Mensaje de la alerta
+     * @param {string} type - Tipo de alerta (success, error, warning, info)
+     * @param {number} duration - Duración en milisegundos (0 para no auto-ocultar)
+     */
+    function showAlert(title, message, type = 'info', duration = 3000) {
+      // Limpiar timeout anterior si existe
+      if (alertTimeout) {
+        clearTimeout(alertTimeout);
+        alertTimeout = null;
+      }
+      
+      // Configurar la alerta según el tipo
+      alertElement.className = 'marcas-alert marcas-alert-' + type;
+      alertHeader.textContent = title;
+      alertBody.textContent = message;
+      
+      // Mostrar la alerta
+      alertContainer.classList.add('show');
+      
+      // Configurar auto-ocultar si tiene duración
+      if (duration > 0) {
+        alertElement.classList.add('marcas-alert-auto-hide');
+        alertTimeout = setTimeout(() => {
+          hideAlert();
+        }, duration);
+      } else {
+        alertElement.classList.remove('marcas-alert-auto-hide');
+      }
     }
     
-    renderizarMarcas(marcas);
-    noResultsMsg.style.display = 'none';
-  } catch (error) {
-    console.error('Error al cargar marcas:', error);
-    noResultsMsg.textContent = 'Error al cargar las marcas';
-    noResultsMsg.style.display = 'block';
-  }
-}
-
-// Renderizar marcas en la tabla
-function renderizarMarcas(marcasFiltradas) {
-  tbody.innerHTML = '';
-  
-  if (marcasFiltradas.length === 0) {
-    noResultsMsg.style.display = 'block';
-    return;
-  }
-  
-  noResultsMsg.style.display = 'none';
-  
-  marcasFiltradas.forEach(marca => {
-    const fila = document.createElement('tr');
-    fila.dataset.id = marca.id_marca;
-    fila.innerHTML = `
-      <td>${marca.id_marca}</td>
-      <td>${marca.nombre}</td>
-      <td class="marcas-actions-cell">
-        <button class="marcas-edit-button" data-id="${marca.id_marca}">✏️ Editar</button>
-        <button class="marcas-delete-button" data-id="${marca.id_marca}">🗑️ Eliminar</button>
-      </td>
-    `;
-    tbody.appendChild(fila);
-  });
-  
-  // Agregar event listeners a los botones
-  document.querySelectorAll('.marcas-edit-button').forEach(btn => {
-    btn.addEventListener('click', abrirModalEdicion);
-  });
-  
-  document.querySelectorAll('.marcas-delete-button').forEach(btn => {
-    btn.addEventListener('click', eliminarMarca);
-  });
-}
-
-// Función de búsqueda con resaltado
-function buscarMarcas(termino) {
-  const filtro = termino.toLowerCase().trim();
-  
-  if (!filtro) {
-    renderizarMarcas(marcas);
-    return;
-  }
-  
-  const resultados = marcas.filter(marca => {
-    return (
-      marca.nombre.toLowerCase().includes(filtro) ||
-      marca.id_marca.toString().includes(filtro)
-    );
-  });
-  
-  // Resaltar coincidencias en los resultados
-  const resultadosConResaltado = resultados.map(marca => {
-    const marcaResaltada = {...marca};
+    /**
+     * Oculta la alerta flotante
+     */
+    function hideAlert() {
+      alertContainer.classList.remove('show');
+      if (alertTimeout) {
+        clearTimeout(alertTimeout);
+        alertTimeout = null;
+      }
+    }
     
-    // Función para resaltar texto
-    const resaltarTexto = (texto) => {
-      if (!texto) return texto;
-      const regex = new RegExp(`(${filtro.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-      return texto.toString().replace(regex, '<span class="marcas-resaltado">$1</span>');
-    };
-    
-    // Aplicar resaltado a todos los campos buscables
-    marcaResaltada.nombre = resaltarTexto(marca.nombre);
-    marcaResaltada.id_marca = resaltarTexto(marca.id_marca);
-    
-    return marcaResaltada;
-  });
-  
-  renderizarMarcas(resultadosConResaltado);
-  
-  if (termino && resultados.length === 0) {
-    noResultsMsg.textContent = `No se encontraron marcas para "${termino}"`;
-    noResultsMsg.style.display = 'block';
-  }
-}
+    /**
+     * Muestra una alerta de confirmación con botones personalizados
+     * @param {string} title - Título de la confirmación
+     * @param {string} message - Mensaje de la confirmación
+     * @param {function} confirmCallback - Función a ejecutar al confirmar
+     * @param {function} [cancelCallback] - Función a ejecutar al cancelar
+     */
+    function showConfirm(title, message, confirmCallback, cancelCallback = null) {
+      // Crear elementos para la confirmación
+      const confirmDiv = document.createElement('div');
+      confirmDiv.className = 'marcas-alert marcas-alert-warning';
+      
+      const header = document.createElement('div');
+      header.className = 'marcas-alert-header';
+      header.textContent = title;
+      
+      const body = document.createElement('div');
+      body.className = 'marcas-alert-body';
+      body.textContent = message;
+      
+      const footer = document.createElement('div');
+      footer.className = 'marcas-alert-footer';
+      
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'marcas-cancel-button';
+      cancelBtn.textContent = 'Cancelar';
+      cancelBtn.style.marginRight = '10px';
+      cancelBtn.addEventListener('click', () => {
+        confirmDiv.remove();
+        if (cancelCallback) cancelCallback();
+      });
+      
+      const confirmBtn = document.createElement('button');
+      confirmBtn.className = 'marcas-save-button';
+      confirmBtn.textContent = 'Confirmar';
+      confirmBtn.addEventListener('click', () => {
+        confirmDiv.remove();
+        if (confirmCallback) confirmCallback();
+      });
+      
+      // Ensamblar elementos
+      footer.appendChild(cancelBtn);
+      footer.appendChild(confirmBtn);
+      
+      confirmDiv.appendChild(header);
+      confirmDiv.appendChild(body);
+      confirmDiv.appendChild(footer);
+      
+      // Mostrar confirmación
+      alertContainer.innerHTML = '';
+      alertContainer.appendChild(confirmDiv);
+      alertContainer.classList.add('show');
+    }
 
-// Abrir modal para nueva marca
-function abrirModalNueva() {
-  modoEdicion = false;
-  marcaEditando = null;
-  modalTitle.textContent = 'Nueva Marca';
-  form.reset();
-  modal.style.display = 'block';
-}
+    // [RESTANTE DEL CÓDIGO SIN CAMBIOS]
+    // Cargar marcas desde la API
+    async function cargarMarcas() {
+      try {
+        const response = await fetch('http://localhost:3000/marcas');
+        marcas = await response.json();
+        
+        if (!Array.isArray(marcas)) {
+          throw new Error('Formato de respuesta inválido');
+        }
+        
+        renderizarMarcas(marcas);
+        noResultsMsg.style.display = 'none';
+      } catch (error) {
+        console.error('Error al cargar marcas:', error);
+        showAlert('Error', 'No se pudieron cargar las marcas. Por favor intente nuevamente.', 'error');
+        noResultsMsg.textContent = 'Error al cargar las marcas';
+        noResultsMsg.style.display = 'block';
+      }
+    }
 
-// Abrir modal para edición
-function abrirModalEdicion(event) {
-  const id = event.target.dataset.id;
-  marcaEditando = marcas.find(m => m.id_marca == id);
-  
-  if (!marcaEditando) return;
-  
-  modoEdicion = true;
-  modalTitle.textContent = 'Editar Marca';
-  
-  // Llenar el formulario
-  document.getElementById('marca-id').value = marcaEditando.id_marca;
-  document.getElementById('marca-nombre').value = marcaEditando.nombre;
-  
-  modal.style.display = 'block';
-}
+    // Renderizar marcas en la tabla
+    function renderizarMarcas(marcasFiltradas) {
+      tbody.innerHTML = '';
+      
+      if (marcasFiltradas.length === 0) {
+        noResultsMsg.style.display = 'block';
+        return;
+      }
+      
+      noResultsMsg.style.display = 'none';
+      
+      marcasFiltradas.forEach(marca => {
+        const fila = document.createElement('tr');
+        fila.dataset.id = marca.id_marca;
+        fila.innerHTML = `
+          <td>${marca.id_marca}</td>
+          <td>${marca.nombre}</td>
+          <td class="marcas-actions-cell">
+            <button class="marcas-edit-button" data-id="${marca.id_marca}">✏️ Editar</button>
+            <button class="marcas-delete-button" data-id="${marca.id_marca}">🗑️ Eliminar</button>
+          </td>
+        `;
+        tbody.appendChild(fila);
+      });
+      
+      // Agregar event listeners a los botones
+      document.querySelectorAll('.marcas-edit-button').forEach(btn => {
+        btn.addEventListener('click', abrirModalEdicion);
+      });
+      
+      document.querySelectorAll('.marcas-delete-button').forEach(btn => {
+        btn.addEventListener('click', confirmarEliminarMarca);
+      });
+    }
 
-// Guardar cambios (POST o PUT)
-async function guardarMarca(event) {
-  event.preventDefault();
-  
-  const marca = {
-    nombre: document.getElementById('marca-nombre').value.trim()
-  };
-  
-  if (!marca.nombre) {
-    alert('El nombre de la marca es requerido');
-    return;
-  }
-  
-  try {
-    let response;
-    const url = modoEdicion 
-      ? `http://localhost:3000/marcas/${document.getElementById('marca-id').value}`
-      : 'http://localhost:3000/marcas';
-    
-    response = await fetch(url, {
-      method: modoEdicion ? 'PUT' : 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(marca)
+    // Función de búsqueda con resaltado
+    function buscarMarcas(termino) {
+      const filtro = termino.toLowerCase().trim();
+      
+      if (!filtro) {
+        renderizarMarcas(marcas);
+        return;
+      }
+      
+      const resultados = marcas.filter(marca => {
+        return (
+          marca.nombre.toLowerCase().includes(filtro) ||
+          marca.id_marca.toString().includes(filtro)
+        );
+      });
+      
+      // Resaltar coincidencias en los resultados
+      const resultadosConResaltado = resultados.map(marca => {
+        const marcaResaltada = {...marca};
+        
+        // Función para resaltar texto
+        const resaltarTexto = (texto) => {
+          if (!texto) return texto;
+          const regex = new RegExp(`(${filtro.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+          return texto.toString().replace(regex, '<span class="marcas-resaltado">$1</span>');
+        };
+        
+        // Aplicar resaltado a todos los campos buscables
+        marcaResaltada.nombre = resaltarTexto(marca.nombre);
+        marcaResaltada.id_marca = resaltarTexto(marca.id_marca);
+        
+        return marcaResaltada;
+      });
+      
+      renderizarMarcas(resultadosConResaltado);
+      
+      if (termino && resultados.length === 0) {
+        noResultsMsg.textContent = `No se encontraron marcas para "${termino}"`;
+        noResultsMsg.style.display = 'block';
+      }
+    }
+
+    // Abrir modal para nueva marca
+    function abrirModalNueva() {
+      modoEdicion = false;
+      marcaEditando = null;
+      modalTitle.textContent = 'Nueva Marca';
+      form.reset();
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    // Cerrar modal
+    function cerrarModal() {
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+      setTimeout(() => {
+        form.reset();
+        marcaEditando = null;
+      }, 300);
+    }
+
+    // Abrir modal para edición
+    function abrirModalEdicion(event) {
+      const id = event.target.dataset.id;
+      marcaEditando = marcas.find(m => m.id_marca == id);
+      
+      if (!marcaEditando) return;
+      
+      modoEdicion = true;
+      modalTitle.textContent = 'Editar Marca';
+      
+      // Llenar el formulario
+      document.getElementById('marca-id').value = marcaEditando.id_marca;
+      document.getElementById('marca-nombre').value = marcaEditando.nombre;
+      
+      modal.classList.add('active');
+    }
+
+    // Guardar cambios (POST o PUT)
+    async function guardarMarca(event) {
+      event.preventDefault();
+      
+      const marca = {
+        nombre: document.getElementById('marca-nombre').value.trim()
+      };
+      
+      if (!marca.nombre) {
+        showAlert('Error', 'El nombre de la marca es requerido', 'error');
+        return;
+      }
+      
+      try {
+        let response;
+        const url = modoEdicion 
+          ? `http://localhost:3000/marcas/${document.getElementById('marca-id').value}`
+          : 'http://localhost:3000/marcas';
+        
+        response = await fetch(url, {
+          method: modoEdicion ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(marca)
+        });
+        
+        if (!response.ok) {
+          throw new Error(modoEdicion ? 'Error al actualizar la marca' : 'Error al crear la marca');
+        }
+        
+        // Recargar marcas
+        await cargarMarcas();
+        cerrarModal();
+        showAlert('Éxito', modoEdicion ? 'Marca actualizada correctamente' : 'Marca creada correctamente', 'success');
+        
+      } catch (error) {
+        console.error('Error al guardar marca:', error);
+        showAlert('Error', error.message, 'error');
+      }
+    }
+
+    // Confirmar eliminación de marca
+    function confirmarEliminarMarca(event) {
+      const id = event.target.dataset.id;
+      const marca = marcas.find(m => m.id_marca == id);
+      
+      if (!marca) return;
+      
+      showConfirm(
+        'Confirmar eliminación',
+        `¿Estás seguro de eliminar la marca "${marca.nombre}"?`,
+        () => eliminarMarca(id)
+      );
+    }
+
+    // Eliminar marca
+    async function eliminarMarca(id) {
+      try {
+        const response = await fetch(`http://localhost:3000/marcas/${id}`, {
+          method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al eliminar la marca');
+        }
+        
+        await cargarMarcas();
+        showAlert('Éxito', 'Marca eliminada correctamente', 'success');
+        
+      } catch (error) {
+        console.error('Error al eliminar marca:', error);
+        showAlert('Error', error.message, 'error');
+      }
+    }
+
+    // Event listeners
+    buscador.addEventListener('input', () => buscarMarcas(buscador.value));
+    refreshBtn.addEventListener('click', cargarMarcas);
+    addBtn.addEventListener('click', abrirModalNueva);
+    closeModal.addEventListener('click', cerrarModal);
+    cancelModal.addEventListener('click', cerrarModal);
+    form.addEventListener('submit', guardarMarca);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        cerrarModal();
+      }
     });
-    
-    if (!response.ok) {
-      throw new Error(modoEdicion ? 'Error al actualizar la marca' : 'Error al crear la marca');
-    }
-    
-    // Recargar marcas
-    await cargarMarcas();
-    cerrarModal();
-    
-  } catch (error) {
-    console.error('Error al guardar marca:', error);
-    alert('Error: ' + error.message);
-  }
-}
 
-// Eliminar marca
-async function eliminarMarca(event) {
-  const id = event.target.dataset.id;
-  
-  if (!confirm('¿Estás seguro de eliminar esta marca?')) {
-    return;
-  }
-  
-  try {
-    const response = await fetch(`http://localhost:3000/marcas/${id}`, {
-      method: 'DELETE'
+    // Cargar marcas al iniciar
+    document.addEventListener('DOMContentLoaded', cargarMarcas);
+  </script>
+
+   <script>
+    document.getElementById("marcas-refresh-btn").addEventListener("click", function() {
+      location.reload(); // Recarga la página
+      // O usa fetch/AJAX para actualizar sin recargar
     });
-    
-    if (!response.ok) {
-      throw new Error('Error al eliminar la marca');
-    }
-    
-    // Recargar marcas
-    await cargarMarcas();
-    
-  } catch (error) {
-    console.error('Error al eliminar marca:', error);
-    alert('Error al eliminar la marca: ' + error.message);
-  }
-}
+  </script>
 
-// Cerrar modal
-function cerrarModal() {
-  modal.style.display = 'none';
-  marcaEditando = null;
-  form.reset();
-}
+ 
 
-// Event listeners
-buscador.addEventListener('input', () => buscarMarcas(buscador.value));
-refreshBtn.addEventListener('click', cargarMarcas);
-addBtn.addEventListener('click', abrirModalNueva);
-closeModal.addEventListener('click', cerrarModal);
-cancelModal.addEventListener('click', cerrarModal);
-form.addEventListener('submit', guardarMarca);
-
-// Cargar marcas al iniciar
-cargarMarcas();</script>
+  
 </body>
 </html>
