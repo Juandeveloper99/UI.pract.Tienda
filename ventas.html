@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Historial de Facturas - Repuestos Nahomi</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
       --primary-color: #2c3e50;
@@ -908,5 +909,69 @@
       });
     });
   </script>
+ <script>
+  // Configurar jsPDF para que esté disponible globalmente
+  window.jspdf = window.jspdf || { jsPDF: jsPDF };
+
+  async function exportToPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Obtener solo las facturas seleccionadas
+    const facturasSeleccionadas = document.querySelectorAll('.factura-checkbox:checked');
+    
+    if (facturasSeleccionadas.length === 0) {
+      showNotification('No hay facturas seleccionadas para exportar.', true);
+      return;
+    }
+
+    let y = 10;
+
+    facturasSeleccionadas.forEach((checkbox, index) => {
+      const card = checkbox.closest('.factura-card');
+      const cliente = card.querySelector('.factura-cliente')?.textContent.replace('Cliente: ', '') || '';
+      const vendedor = card.querySelector('.factura-vendedor')?.textContent.replace('Vendedor: ', '') || '';
+      const fecha = card.querySelector('.factura-fecha')?.textContent || '';
+      const total = card.querySelector('.total-amount')?.textContent || '';
+      const facturaId = card.querySelector('.factura-id')?.textContent || '';
+
+      doc.setFontSize(12);
+      doc.text(`${facturaId}`, 10, y);
+      doc.text(`${fecha}`, 150, y);
+      y += 8;
+      doc.text(`Cliente: ${cliente}`, 10, y);
+      y += 8;
+      doc.text(`Vendedor: ${vendedor}`, 10, y);
+      y += 8;
+
+      const rows = card.querySelectorAll('tbody tr');
+      doc.setFontSize(10);
+      doc.text('Cant.   Producto                    Precio    Subtotal', 10, y);
+      y += 6;
+
+      rows.forEach(row => {
+        const cols = row.querySelectorAll('td');
+        if (cols.length === 4) {
+          const line = `${cols[0].textContent.trim().padEnd(6)} ${cols[1].textContent.trim().padEnd(25)} ${cols[2].textContent.trim().padEnd(10)} ${cols[3].textContent.trim()}`;
+          doc.text(line, 10, y);
+          y += 6;
+        }
+      });
+
+      y += 6;
+      doc.text(`Total Factura: ${total}`, 150, y, { align: 'right' });
+      y += 10;
+
+      // Nueva página si está por finalizar
+      if (y > 260 && index !== facturasSeleccionadas.length - 1) {
+        doc.addPage();
+        y = 10;
+      }
+    });
+
+    doc.save('facturas_seleccionadas.pdf');
+    showNotification(`PDF generado con ${facturasSeleccionadas.length} factura(s) seleccionada(s)`);
+  }
+</script>
 </body>
 </html>
