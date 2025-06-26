@@ -440,6 +440,7 @@
       <a href="facturacion.html">Facturación</a>
       <a href="inventario.html">Inventario</a>
       <a href="ventas.html">Ventas</a>
+      
     </nav>
   </header>
   
@@ -467,25 +468,55 @@
     
     <!-- Buscador -->
     <div class="search-container">
-      
+      <h2 class="search-title">Buscar Facturas</h2>
       <form id="search-form" class="search-form">
-       
-       
         <div class="search-group">
-          <label for="search-seller">Vendedor</label>
-          <input type="text" id="search-seller" class="search-input" placeholder="Nombre del vendedor">
+          <label for="search-client">Cliente</label>
+          <input type="text" id="search-client" class="search-input" placeholder="Nombre del cliente" autocomplete="off">
+          <div class="suggestions" id="client-suggestions"></div>
         </div>
         <div class="search-group">
-          <label for="search-date">Fecha</label>
-          <input type="date" id="search-date" class="search-input">
+          <label for="search-product">Producto</label>
+          <input type="text" id="search-product" class="search-input" placeholder="Nombre del producto" autocomplete="off">
+          <div class="suggestions" id="product-suggestions"></div>
         </div>
         <div class="action-buttons">
           <button type="submit" class="search-button">Buscar</button>
           <button type="button" class="search-button print-btn" onclick="window.print()">Imprimir Todo</button>
           <button type="button" class="search-button" onclick="exportToPDF()">Exportar PDF</button>
+          <button type="button" class="search-button" id="clear-filters">Limpiar Filtros</button>
+          <button type="button" class="search-button" id="nuevo-credito-btn">Nuevo Crédito</button>
         </div>
       </form>
     </div>
+
+    <script>
+  document.getElementById("nuevo-credito-btn").addEventListener("click", function () {
+    window.location.href = 'nuevocredito.html';
+  });
+</script>
+
+    <script>
+  document.getElementById("clear-filters").addEventListener("click", function () {
+    // Selecciona todos los inputs y selects dentro del formulario o contenedor
+    const filtersContainer = document.querySelector(".filters-container") || document; // Ajusta si usas un contenedor específico
+    const inputs = filtersContainer.querySelectorAll("input, select");
+
+    inputs.forEach(element => {
+      if (element.tagName === "SELECT") {
+        element.selectedIndex = 0;
+      } else if (element.type === "checkbox" || element.type === "radio") {
+        element.checked = false;
+      } else {
+        element.value = "";
+      }
+    });
+
+    // Si tienes una función que aplica los filtros, puedes llamarla de nuevo aquí si hace falta
+    // aplicarFiltros();
+  });
+</script>
+
     
     <!-- Acciones de selección -->
     <div class="selection-actions" id="selection-actions">
@@ -772,85 +803,103 @@
       }
       
       // Función para imprimir facturas seleccionadas
-      window.printSelectedInvoices = function() {
-        const selected = Array.from(document.querySelectorAll('.factura-checkbox:checked'))
-                         .map(el => el.closest('.factura-card'));
-        
-        if (selected.length === 0) {
-          showNotification('Seleccione al menos una factura para imprimir', true);
-          return;
-        }
-        
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Facturas Seleccionadas</title>
-              <style>
-                body {
-                  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                  padding: 20px;
-                }
-                .factura-card {
-                  border: 1px solid #ddd;
-                  padding: 20px;
-                  margin-bottom: 20px;
-                  page-break-inside: avoid;
-                }
-                .factura-header {
-                  border-bottom: 2px solid #3498db;
-                  padding-bottom: 15px;
-                  margin-bottom: 15px;
-                }
-                .productos-table {
-                  width: 100%;
-                  border-collapse: collapse;
-                }
-                .productos-table th {
-                  background-color: #34495e;
-                  color: white;
-                  padding: 8px;
-                }
-                .productos-table td {
-                  padding: 8px;
-                  border-bottom: 1px solid #eee;
-                }
-                .total-section {
-                  text-align: right;
-                  margin-top: 15px;
-                  padding-top: 10px;
-                  border-top: 2px solid #3498db;
-                }
-                @page {
-                  size: auto;
-                  margin: 10mm;
-                }
-              </style>
-            </head>
-            <body>
-        `);
-        
-        selected.forEach(card => {
-          // Clonar el card para no incluir el checkbox en la impresión
-          const cardClone = card.cloneNode(true);
-          const checkbox = cardClone.querySelector('.factura-checkbox');
-          if (checkbox) checkbox.remove();
-          
-          printWindow.document.write(cardClone.innerHTML);
-          printWindow.document.write('<div style="page-break-after: always;"></div>');
-        });
-        
-        printWindow.document.write('</body></html>');
-        printWindow.document.close();
-        
-        // Esperar a que el contenido se cargue antes de imprimir
-        printWindow.onload = function() {
-          setTimeout(() => {
-            printWindow.print();
-            printWindow.close();
-          }, 500);
-        };
-      };
+      // Función para imprimir facturas seleccionadas
+window.printSelectedInvoices = function() {
+  const selected = Array.from(document.querySelectorAll('.factura-checkbox:checked'))
+                   .map(el => el.closest('.factura-card'));
+  
+  if (selected.length === 0) {
+    showNotification('Seleccione al menos una factura para imprimir', true);
+    return;
+  }
+  
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Facturas Seleccionadas</title>
+        <style>
+          body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+          }
+          .header-empresa {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+          }
+          .header-mensaje {
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+          }
+          .factura-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+          }
+          .factura-header {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+          }
+          .productos-table {
+            width: 100%;
+            border-collapse: collapse;
+          }
+          .productos-table th {
+            background-color: #34495e;
+            color: white;
+            padding: 8px;
+          }
+          .productos-table td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+          }
+          .total-section {
+            text-align: right;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 2px solid #3498db;
+          }
+          @page {
+            size: auto;
+            margin: 10mm;
+          }
+        </style>
+      </head>
+      <body>
+  `);
+  
+  selected.forEach(card => {
+    // Clonar el card para no incluir el checkbox en la impresión
+    const cardClone = card.cloneNode(true);
+    const checkbox = cardClone.querySelector('.factura-checkbox');
+    if (checkbox) checkbox.remove();
+    
+    printWindow.document.write(`
+      <div class="header-empresa">REPUESTOS NAHOMI</div>
+      <div class="header-mensaje">Gracias por su compra</div>
+    `);
+    printWindow.document.write(cardClone.innerHTML);
+    printWindow.document.write('<div style="page-break-after: always;"></div>');
+  });
+  
+  printWindow.document.write('</body></html>');
+  printWindow.document.close();
+  
+  // Esperar a que el contenido se cargue antes de imprimir
+  printWindow.onload = function() {
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
+  };
+};
       
       // Función principal para cargar facturas
       function loadFacturas() {
@@ -907,6 +956,148 @@
   // Configurar jsPDF para que esté disponible globalmente
   window.jspdf = window.jspdf || { jsPDF: jsPDF };
 
+  // Función para obtener los estilos comunes para impresión/PDF
+  function getCommonStyles() {
+    return `
+      <style>
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          padding: 20px;
+        }
+        .header-empresa {
+          text-align: center;
+          font-size: 18px;
+          font-weight: bold;
+          margin-bottom: 5px;
+        }
+        .header-mensaje {
+          text-align: center;
+          font-size: 14px;
+          margin-bottom: 15px;
+          border-bottom: 1px solid #ddd;
+          padding-bottom: 10px;
+        }
+        .factura-card {
+          border: 1px solid #ddd;
+          padding: 20px;
+          margin-bottom: 20px;
+          page-break-inside: avoid;
+        }
+        .factura-header {
+          display: flex;
+          justify-content: space-between;
+          border-bottom: 2px solid #3498db;
+          padding-bottom: 15px;
+          margin-bottom: 15px;
+        }
+        .factura-id {
+          font-size: 18px;
+          font-weight: bold;
+          color: #2c3e50;
+        }
+        .factura-fecha {
+          color: #7f8c8d;
+          font-size: 14px;
+        }
+        .factura-cliente {
+          font-weight: bold;
+          margin-bottom: 10px;
+          font-size: 16px;
+        }
+        .factura-vendedor {
+          color: #7f8c8d;
+          margin-bottom: 20px;
+          font-style: italic;
+        }
+        .productos-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 20px 0;
+        }
+        .productos-table th {
+          background-color: #34495e;
+          color: white;
+          padding: 8px;
+          text-align: left;
+        }
+        .productos-table td {
+          padding: 8px;
+          border-bottom: 1px solid #eee;
+        }
+        .total-section {
+          text-align: right;
+          margin-top: 20px;
+          padding-top: 15px;
+          border-top: 2px solid #3498db;
+        }
+        .total-label {
+          font-weight: bold;
+          font-size: 16px;
+        }
+        .total-amount {
+          font-size: 18px;
+          color: #2c3e50;
+          font-weight: bold;
+        }
+        @page {
+          size: auto;
+          margin: 10mm;
+        }
+      </style>
+    `;
+  }
+
+  // Función para generar el HTML común para una factura
+  function generateInvoiceHTML(card) {
+    const cardClone = card.cloneNode(true);
+    const checkbox = cardClone.querySelector('.factura-checkbox');
+    if (checkbox) checkbox.remove();
+    
+    return `
+      <div class="header-empresa">REPUESTOS NAHOMI</div>
+      <div class="header-mensaje">Gracias por su compra</div>
+      ${cardClone.innerHTML}
+    `;
+  }
+
+  // Función para imprimir facturas seleccionadas
+  window.printSelectedInvoices = function() {
+    const selected = Array.from(document.querySelectorAll('.factura-checkbox:checked'))
+                     .map(el => el.closest('.factura-card'));
+    
+    if (selected.length === 0) {
+      showNotification('Seleccione al menos una factura para imprimir', true);
+      return;
+    }
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Facturas Seleccionadas</title>
+          ${getCommonStyles()}
+        </head>
+        <body>
+    `);
+    
+    selected.forEach(card => {
+      printWindow.document.write(generateInvoiceHTML(card));
+      printWindow.document.write('<div style="page-break-after: always;"></div>');
+    });
+    
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    
+    // Esperar a que el contenido se cargue antes de imprimir
+    printWindow.onload = function() {
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+    };
+  };
+
+  // Función para exportar a PDF con estilos consistentes
   async function exportToPDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -919,41 +1110,105 @@
       return;
     }
 
+    // Configuración común
+    const primaryColor = '#2c3e50';
+    const accentColor = '#3498db';
+    const mediumGray = '#7f8c8d';
     let y = 10;
 
     facturasSeleccionadas.forEach((checkbox, index) => {
       const card = checkbox.closest('.factura-card');
+      
+      // Encabezado común
+      doc.setFontSize(18);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(primaryColor);
+      doc.text('REPUESTOS NAHOMI', 105, y, { align: 'center' });
+      y += 7;
+      
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'normal');
+      doc.text('Gracias por su compra', 105, y, { align: 'center' });
+      y += 10;
+
+      // Datos de la factura
       const cliente = card.querySelector('.factura-cliente')?.textContent.replace('Cliente: ', '') || '';
       const vendedor = card.querySelector('.factura-vendedor')?.textContent.replace('Vendedor: ', '') || '';
       const fecha = card.querySelector('.factura-fecha')?.textContent || '';
       const total = card.querySelector('.total-amount')?.textContent || '';
       const facturaId = card.querySelector('.factura-id')?.textContent || '';
 
+      // Encabezado de factura
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(primaryColor);
+      doc.text(`${facturaId}`, 14, y);
+      
       doc.setFontSize(12);
-      doc.text(`${facturaId}`, 10, y);
-      doc.text(`${fecha}`, 150, y);
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(mediumGray);
+      doc.text(`${fecha}`, 180, y, { align: 'right' });
       y += 8;
-      doc.text(`Cliente: ${cliente}`, 10, y);
+      
+      // Cliente y vendedor
+      doc.setFontSize(12);
+      doc.setTextColor(primaryColor);
+      doc.text(`Cliente: ${cliente}`, 14, y);
       y += 8;
-      doc.text(`Vendedor: ${vendedor}`, 10, y);
-      y += 8;
+      
+      doc.setFont(undefined, 'italic');
+      doc.setTextColor(mediumGray);
+      doc.text(`Vendedor: ${vendedor}`, 14, y);
+      y += 10;
 
-      const rows = card.querySelectorAll('tbody tr');
+      // Tabla de productos
       doc.setFontSize(10);
-      doc.text('Cant.   Producto                    Precio    Subtotal', 10, y);
-      y += 6;
-
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(255, 255, 255);
+      doc.setFillColor(52, 73, 94); // Color del encabezado de tabla
+      doc.rect(10, y, 190, 7, 'F');
+      doc.text('Cant.', 12, y + 5);
+      doc.text('Descripción', 30, y + 5);
+      doc.text('Precio Unit.', 140, y + 5);
+      doc.text('Subtotal', 170, y + 5);
+      y += 7;
+      
+      const rows = card.querySelectorAll('tbody tr');
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(0, 0, 0); // Negro para el contenido
+      
       rows.forEach(row => {
         const cols = row.querySelectorAll('td');
         if (cols.length === 4) {
-          const line = `${cols[0].textContent.trim().padEnd(6)} ${cols[1].textContent.trim().padEnd(25)} ${cols[2].textContent.trim().padEnd(10)} ${cols[3].textContent.trim()}`;
-          doc.text(line, 10, y);
+          // Cantidad
+          doc.text(cols[0].textContent.trim(), 12, y + 5);
+          // Descripción
+          doc.text(cols[1].textContent.trim(), 30, y + 5);
+          // Precio Unit.
+          doc.text(cols[2].textContent.trim(), 140, y + 5, { align: 'right' });
+          // Subtotal
+          doc.text(cols[3].textContent.trim(), 170, y + 5, { align: 'right' });
           y += 6;
+          
+          // Línea divisoria
+          if (y < 280) {
+            doc.setDrawColor(200, 200, 200);
+            doc.line(10, y + 2, 200, y + 2);
+            y += 3;
+          }
         }
       });
 
+      // Total
       y += 6;
-      doc.text(`Total Factura: ${total}`, 150, y, { align: 'right' });
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(primaryColor);
+      doc.setDrawColor(accentColor);
+      doc.line(120, y, 200, y);
+      y += 4;
+      doc.text('Total Factura:', 140, y, { align: 'right' });
+      doc.text(total, 180, y, { align: 'right' });
       y += 10;
 
       // Nueva página si está por finalizar
@@ -966,6 +1221,231 @@
     doc.save('facturas_seleccionadas.pdf');
     showNotification(`PDF generado con ${facturasSeleccionadas.length} factura(s) seleccionada(s)`);
   }
+
+  // También actualiza el CSS para impresión para que coincida
+  document.head.insertAdjacentHTML('beforeend', `
+    <style>
+      @media print {
+        ${getCommonStyles()}
+        
+        .marcas-header,
+        .search-container,
+        .stats-container,
+        .selection-actions,
+        .factura-checkbox,
+        .select-all-container {
+          display: none !important;
+        }
+      }
+    </style>
+  `);
 </script>
+
+<script>
+      // Agregar estilos para las sugerencias
+      const style = document.createElement('style');
+      style.textContent = `
+        .suggestions {
+          position: absolute;
+          background: white;
+          border: 1px solid #ddd;
+          border-top: none;
+          width: calc(100% - 2px);
+          max-height: 200px;
+          overflow-y: auto;
+          z-index: 1000;
+          display: none;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .suggestion-item {
+          padding: 8px 10px;
+          cursor: pointer;
+        }
+        .suggestion-item:hover {
+          background-color: #f0f0f0;
+        }
+        .search-group {
+          position: relative;
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Variables para autocompletado
+      let clientNames = new Set();
+      let productNames = new Set();
+      
+      // Función para extraer nombres de clientes y productos
+      function extractSearchData(facturas) {
+        clientNames.clear();
+        productNames.clear();
+        
+        facturas.forEach(factura => {
+          // Extraer nombres de clientes
+          if (factura.cliente) {
+            clientNames.add(factura.cliente.toLowerCase());
+          }
+          
+          // Extraer nombres de productos
+          const productos = parseProductos(factura.productos_fact);
+          productos.forEach(p => {
+            if (p.producto) {
+              productNames.add(p.producto.toLowerCase());
+            }
+          });
+        });
+      }
+      
+      // Función para mostrar sugerencias
+      function showSuggestions(inputElement, suggestionsElement, suggestions) {
+        const inputValue = inputElement.value.toLowerCase();
+        if (!inputValue) {
+          suggestionsElement.style.display = 'none';
+          return;
+        }
+        
+        const filtered = Array.from(suggestions).filter(item => 
+          item.includes(inputValue)
+        );
+        
+        if (filtered.length === 0) {
+          suggestionsElement.style.display = 'none';
+          return;
+        }
+        
+        suggestionsElement.innerHTML = filtered
+          .map(item => `<div class="suggestion-item">${item}</div>`)
+          .join('');
+        
+        suggestionsElement.style.display = 'block';
+        
+        // Manejar clic en sugerencia
+        suggestionsElement.querySelectorAll('.suggestion-item').forEach(item => {
+          item.addEventListener('click', () => {
+            inputElement.value = item.textContent;
+            suggestionsElement.style.display = 'none';
+            filterFacturas();
+          });
+        });
+      }
+      
+      // Función para filtrar facturas mejorada
+      function filterFacturas() {
+        const clientSearch = document.getElementById('search-client').value.toLowerCase();
+        const productSearch = document.getElementById('search-product').value.toLowerCase();
+        const sellerSearch = document.getElementById('search-seller').value.toLowerCase();
+        const dateSearch = document.getElementById('search-date').value;
+        
+        const filtered = allFacturas.filter(factura => {
+          // Filtrar por cliente (búsqueda más flexible)
+          if (clientSearch && !factura.cliente.toLowerCase().includes(clientSearch)) {
+            return false;
+          }
+          
+          // Filtrar por vendedor
+          if (sellerSearch && !factura.usuario_factura.toLowerCase().includes(sellerSearch)) {
+            return false;
+          }
+          
+          // Filtrar por fecha
+          if (dateSearch) {
+            const searchDate = new Date(dateSearch);
+            searchDate.setHours(0, 0, 0, 0);
+            
+            const facturaDate = new Date(factura.fecha_fact);
+            facturaDate.setHours(0, 0, 0, 0);
+            
+            if (facturaDate.getTime() !== searchDate.getTime()) {
+              return false;
+            }
+          }
+          
+          // Filtrar por producto (búsqueda más eficiente)
+          if (productSearch) {
+            // Primero verificar si el texto de productos contiene la búsqueda (más rápido)
+            if (!factura.productos_fact.toLowerCase().includes(productSearch)) {
+              return false;
+            }
+            
+            // Luego hacer el parseo detallado para confirmar
+            const productos = parseProductos(factura.productos_fact);
+            const hasProduct = productos.some(p => 
+              p.producto.toLowerCase().includes(productSearch)
+            );
+            if (!hasProduct) {
+              return false;
+            }
+          }
+          
+          return true;
+        });
+        
+        renderFacturas(filtered);
+      }
+      
+      // Eventos para autocompletado
+      document.getElementById('search-client').addEventListener('input', function() {
+        showSuggestions(this, document.getElementById('client-suggestions'), clientNames);
+      });
+      
+      document.getElementById('search-product').addEventListener('input', function() {
+        showSuggestions(this, document.getElementById('product-suggestions'), productNames);
+      });
+      
+      // Ocultar sugerencias al hacer clic fuera
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.search-group')) {
+          document.getElementById('client-suggestions').style.display = 'none';
+          document.getElementById('product-suggestions').style.display = 'none';
+        }
+      });
+      
+      // Limpiar filtros
+      document.getElementById('clear-filters').addEventListener('click', function() {
+        document.getElementById('search-client').value = '';
+        document.getElementById('search-product').value = '';
+        document.getElementById('search-seller').value = '';
+        document.getElementById('search-date').value = '';
+        filterFacturas();
+      });
+      
+      // Modificar la función loadFacturas para extraer datos de búsqueda
+      function loadFacturas() {
+        showLoading(true);
+        
+        fetch('http://localhost:3000/credito')
+          .then(response => {
+            if (!response.ok) throw new Error('Error en la red');
+            return response.json();
+          })
+          .then(data => {
+            allFacturas = data;
+            extractSearchData(allFacturas); // Extraer datos para autocompletado
+            updateStats(allFacturas);
+            renderFacturas(allFacturas);
+            showNotification(`${data.length} facturas cargadas correctamente`);
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            showNotification(`Error: ${error.message}`, true);
+            container.innerHTML = `
+              <div class="error">
+                Error al cargar las facturas: ${error.message}
+                <div class="action-buttons">
+                  <button class="search-button" onclick="loadFacturas()">Reintentar</button>
+                </div>
+              </div>
+            `;
+          })
+          .finally(() => {
+            showLoading(false);
+          });
+      }
+      
+      // (El resto del código permanece igual)
+      
+      // Inicializar
+      loadFacturas();
+    });
+  </script>
 </body>
 </html>

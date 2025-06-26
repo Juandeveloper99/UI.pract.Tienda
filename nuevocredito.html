@@ -405,12 +405,11 @@
       <a href="facturacion.html">Facturación</a>
       <a href="inventario.html">Inventario</a>
       <a href="ventas.html">Ventas</a>
-      <a href="credito.html">Créditos</a>
     </nav>
   </header>
 
   <div class="facturacion-container">
-    <h2 class="facturacion-form-title">Sistema de Facturación</h2>
+    <h2 class="facturacion-form-title">CREAR UN NUEVO CREDITO</h2>
     
     <!-- Información de la factura -->
     <div class="facturacion-info-section">
@@ -865,8 +864,6 @@
           }, 3000);
         }
       });
-
-      
       
       // Verificar si hay productos en la factura
       if (productosSeleccionados.length === 0) {
@@ -920,7 +917,7 @@
         `¿Está seguro que desea generar la factura por un total de ${totalFinal.textContent}?`,
         function() {
           // Enviar factura a la API
-          fetch('http://localhost:3000/facturacion', {
+          fetch('http://localhost:3000/credito', {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json'
@@ -946,7 +943,6 @@
         }
       );
     }
-
 
     // Event listeners
     document.addEventListener('DOMContentLoaded', function() {
@@ -984,9 +980,5 @@
     // Hacer la función eliminarProducto global para que funcione en los botones
     window.eliminarProducto = eliminarProducto;
   </script>
-  <script>
-  </script>
-
-  
 </body>
 </html>
