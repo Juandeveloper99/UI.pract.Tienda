@@ -467,48 +467,25 @@
     
     <!-- Buscador -->
     <div class="search-container">
-      <h2 class="search-title">Buscar Facturas</h2>
+      
       <form id="search-form" class="search-form">
+       
+       
         <div class="search-group">
-          <label for="search-client">Cliente</label>
-          <input type="text" id="search-client" class="search-input" placeholder="Nombre del cliente" autocomplete="off">
-          <div class="suggestions" id="client-suggestions"></div>
+          <label for="search-seller">Vendedor</label>
+          <input type="text" id="search-seller" class="search-input" placeholder="Nombre del vendedor">
         </div>
         <div class="search-group">
-          <label for="search-product">Producto</label>
-          <input type="text" id="search-product" class="search-input" placeholder="Nombre del producto" autocomplete="off">
-          <div class="suggestions" id="product-suggestions"></div>
+          <label for="search-date">Fecha</label>
+          <input type="date" id="search-date" class="search-input">
         </div>
         <div class="action-buttons">
           <button type="submit" class="search-button">Buscar</button>
           <button type="button" class="search-button print-btn" onclick="window.print()">Imprimir Todo</button>
           <button type="button" class="search-button" onclick="exportToPDF()">Exportar PDF</button>
-          <button type="button" class="search-button" id="clear-filters">Limpiar Filtros</button>
         </div>
       </form>
     </div>
-
-    <script>
-  document.getElementById("clear-filters").addEventListener("click", function () {
-    // Selecciona todos los inputs y selects dentro del formulario o contenedor
-    const filtersContainer = document.querySelector(".filters-container") || document; // Ajusta si usas un contenedor específico
-    const inputs = filtersContainer.querySelectorAll("input, select");
-
-    inputs.forEach(element => {
-      if (element.tagName === "SELECT") {
-        element.selectedIndex = 0;
-      } else if (element.type === "checkbox" || element.type === "radio") {
-        element.checked = false;
-      } else {
-        element.value = "";
-      }
-    });
-
-    // Si tienes una función que aplica los filtros, puedes llamarla de nuevo aquí si hace falta
-    // aplicarFiltros();
-  });
-</script>
-
     
     <!-- Acciones de selección -->
     <div class="selection-actions" id="selection-actions">
@@ -879,7 +856,7 @@
       function loadFacturas() {
         showLoading(true);
         
-        fetch('http://localhost:3000/facturacion')
+        fetch('http://localhost:3000/credito')
           .then(response => {
             if (!response.ok) throw new Error('Error en la red');
             return response.json();
@@ -990,211 +967,5 @@
     showNotification(`PDF generado con ${facturasSeleccionadas.length} factura(s) seleccionada(s)`);
   }
 </script>
-<script>
-      // Agregar estilos para las sugerencias
-      const style = document.createElement('style');
-      style.textContent = `
-        .suggestions {
-          position: absolute;
-          background: white;
-          border: 1px solid #ddd;
-          border-top: none;
-          width: calc(100% - 2px);
-          max-height: 200px;
-          overflow-y: auto;
-          z-index: 1000;
-          display: none;
-          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .suggestion-item {
-          padding: 8px 10px;
-          cursor: pointer;
-        }
-        .suggestion-item:hover {
-          background-color: #f0f0f0;
-        }
-        .search-group {
-          position: relative;
-        }
-      `;
-      document.head.appendChild(style);
-
-      // Variables para autocompletado
-      let clientNames = new Set();
-      let productNames = new Set();
-      
-      // Función para extraer nombres de clientes y productos
-      function extractSearchData(facturas) {
-        clientNames.clear();
-        productNames.clear();
-        
-        facturas.forEach(factura => {
-          // Extraer nombres de clientes
-          if (factura.cliente) {
-            clientNames.add(factura.cliente.toLowerCase());
-          }
-          
-          // Extraer nombres de productos
-          const productos = parseProductos(factura.productos_fact);
-          productos.forEach(p => {
-            if (p.producto) {
-              productNames.add(p.producto.toLowerCase());
-            }
-          });
-        });
-      }
-      
-      // Función para mostrar sugerencias
-      function showSuggestions(inputElement, suggestionsElement, suggestions) {
-        const inputValue = inputElement.value.toLowerCase();
-        if (!inputValue) {
-          suggestionsElement.style.display = 'none';
-          return;
-        }
-        
-        const filtered = Array.from(suggestions).filter(item => 
-          item.includes(inputValue)
-        );
-        
-        if (filtered.length === 0) {
-          suggestionsElement.style.display = 'none';
-          return;
-        }
-        
-        suggestionsElement.innerHTML = filtered
-          .map(item => `<div class="suggestion-item">${item}</div>`)
-          .join('');
-        
-        suggestionsElement.style.display = 'block';
-        
-        // Manejar clic en sugerencia
-        suggestionsElement.querySelectorAll('.suggestion-item').forEach(item => {
-          item.addEventListener('click', () => {
-            inputElement.value = item.textContent;
-            suggestionsElement.style.display = 'none';
-            filterFacturas();
-          });
-        });
-      }
-      
-      // Función para filtrar facturas mejorada
-      function filterFacturas() {
-        const clientSearch = document.getElementById('search-client').value.toLowerCase();
-        const productSearch = document.getElementById('search-product').value.toLowerCase();
-        const sellerSearch = document.getElementById('search-seller').value.toLowerCase();
-        const dateSearch = document.getElementById('search-date').value;
-        
-        const filtered = allFacturas.filter(factura => {
-          // Filtrar por cliente (búsqueda más flexible)
-          if (clientSearch && !factura.cliente.toLowerCase().includes(clientSearch)) {
-            return false;
-          }
-          
-          // Filtrar por vendedor
-          if (sellerSearch && !factura.usuario_factura.toLowerCase().includes(sellerSearch)) {
-            return false;
-          }
-          
-          // Filtrar por fecha
-          if (dateSearch) {
-            const searchDate = new Date(dateSearch);
-            searchDate.setHours(0, 0, 0, 0);
-            
-            const facturaDate = new Date(factura.fecha_fact);
-            facturaDate.setHours(0, 0, 0, 0);
-            
-            if (facturaDate.getTime() !== searchDate.getTime()) {
-              return false;
-            }
-          }
-          
-          // Filtrar por producto (búsqueda más eficiente)
-          if (productSearch) {
-            // Primero verificar si el texto de productos contiene la búsqueda (más rápido)
-            if (!factura.productos_fact.toLowerCase().includes(productSearch)) {
-              return false;
-            }
-            
-            // Luego hacer el parseo detallado para confirmar
-            const productos = parseProductos(factura.productos_fact);
-            const hasProduct = productos.some(p => 
-              p.producto.toLowerCase().includes(productSearch)
-            );
-            if (!hasProduct) {
-              return false;
-            }
-          }
-          
-          return true;
-        });
-        
-        renderFacturas(filtered);
-      }
-      
-      // Eventos para autocompletado
-      document.getElementById('search-client').addEventListener('input', function() {
-        showSuggestions(this, document.getElementById('client-suggestions'), clientNames);
-      });
-      
-      document.getElementById('search-product').addEventListener('input', function() {
-        showSuggestions(this, document.getElementById('product-suggestions'), productNames);
-      });
-      
-      // Ocultar sugerencias al hacer clic fuera
-      document.addEventListener('click', function(e) {
-        if (!e.target.closest('.search-group')) {
-          document.getElementById('client-suggestions').style.display = 'none';
-          document.getElementById('product-suggestions').style.display = 'none';
-        }
-      });
-      
-      // Limpiar filtros
-      document.getElementById('clear-filters').addEventListener('click', function() {
-        document.getElementById('search-client').value = '';
-        document.getElementById('search-product').value = '';
-        document.getElementById('search-seller').value = '';
-        document.getElementById('search-date').value = '';
-        filterFacturas();
-      });
-      
-      // Modificar la función loadFacturas para extraer datos de búsqueda
-      function loadFacturas() {
-        showLoading(true);
-        
-        fetch('http://localhost:3000/facturacion')
-          .then(response => {
-            if (!response.ok) throw new Error('Error en la red');
-            return response.json();
-          })
-          .then(data => {
-            allFacturas = data;
-            extractSearchData(allFacturas); // Extraer datos para autocompletado
-            updateStats(allFacturas);
-            renderFacturas(allFacturas);
-            showNotification(`${data.length} facturas cargadas correctamente`);
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            showNotification(`Error: ${error.message}`, true);
-            container.innerHTML = `
-              <div class="error">
-                Error al cargar las facturas: ${error.message}
-                <div class="action-buttons">
-                  <button class="search-button" onclick="loadFacturas()">Reintentar</button>
-                </div>
-              </div>
-            `;
-          })
-          .finally(() => {
-            showLoading(false);
-          });
-      }
-      
-      // (El resto del código permanece igual)
-      
-      // Inicializar
-      loadFacturas();
-    });
-  </script>
 </body>
 </html>
